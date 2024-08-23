@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  auth:
+    build:
+      context: ./auth
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./auth/app:/app
+
+  algo:
+    build:
+      context: ./algo
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./algo/app:/app
