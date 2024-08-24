@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pymongo.database import Database
 
 from dependencies import get_database
-from models.users import User, UserRegister, UserUpdate, UpdatePassword, UserLogin
+from models.users import User, UserRegister, Token, UpdatePassword, UserLogin
 from services.userServices import create_user, get_user_by_id, authenticate_user
-from services import jwtServices
+from services import userServices
 
 router = APIRouter(prefix="/users", tags=['users'])
 
@@ -22,28 +22,14 @@ async def register_user(user_create: UserRegister, db: Database = Depends(get_da
             status_code=status.HTTP_400_BAD_REQUEST, detail=response["error"])
 
     return {
-        "id": response["user_id"],
+        "id": response["id"],
         "email": user_create.email,
+        "company_name": user_create.company_name,
+        "name": user_create.name,
+        "phone_number": user_create.phone_number,
+        "role": user_create.role,
+        "is_verified": False
     }
-
-
-@router.get("/{user_id}", response_model=User)
-async def get_user(user_id: str, db: Database = Depends(get_database)):
-    """
-    Controller to get a user by ID.
-    """
-    response = get_user_by_id(db, user_id)
-
-    if not response["success"]:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=response["error"])
-
-    return response["user"]
-
-
-# @router.put("/{user_id}")
-# async def update_user_info(user_id: str, updates: UserUpdate, db: Database = Depends(get_database)):
-#     pass
 
 
 @router.post("/login")
@@ -51,17 +37,24 @@ async def login(user_login: UserLogin, db: Database = Depends(get_database)):
     """
     Authenticate a user by their email and password.
     """
-    response = authenticate_user(db, user_login)
+    user = authenticate_user(db, user_login)
 
-    if not response["success"]:
+    if not user:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=response["error"])
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    return {
-        "access_token": jwtServices.create_access_token(response['user']),
-        "refresh_token": jwtServices.create_refresh_token(response['user']),
-    }
+    access_token = userServices.create_access_token(user)
 
-# @router.put("/{}")
-# async def update_password(update_password: UpdatePassword, current_user: CurrentUser, db: Database = Depends(get_database)):
-#     pass
+    return Token(access_token=access_token, token_type="Bearer")
+
+
+@router.get("/me", response_model=User)
+async def get_me(current_user: User = Depends(userServices.get_current_user)):
+    """
+    Controller to get the current authenticated user's information.
+    """
+
+    return current_user

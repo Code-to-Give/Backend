@@ -1,9 +1,27 @@
-from pymongo.database import Database
-from models.users import UserRegister, UserLogin
 import bcrypt
-from bson import ObjectId
+import jwt
+import os
 
-from typing import Dict, Any
+from bson import ObjectId
+from typing import Dict, Any, Annotated
+from datetime import datetime, timedelta, timezone
+from fastapi import HTTPException, status, Depends
+from fastapi.security import OAuth2PasswordBearer
+from jwt.exceptions import InvalidTokenError
+from pymongo.database import Database
+
+from dependencies import get_database
+from models.users import UserRegister, UserLogin, User
+
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
+
+
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+JWT_REFRESH_SECRET_KEY = os.getenv("JWT_REFRESH_SECRET_KEY")
 
 
 def create_user(db: Database, user: UserRegister) -> Dict[str, Any]:
@@ -22,7 +40,8 @@ def create_user(db: Database, user: UserRegister) -> Dict[str, Any]:
         "company_name": user.company_name,
         "name": user.name,
         "phone_number": user.phone_number,
-        "role": user.role
+        "role": user.role,
+        "is_verified": True
     }
 
     try:
@@ -30,54 +49,96 @@ def create_user(db: Database, user: UserRegister) -> Dict[str, Any]:
     except Exception as e:
         return {"success": False, "error": f"Failed to create user: {str(e)}"}
 
-    return {"success": True, "user_id": str(result.inserted_id), "message": "User created successfully"}
+    return {"success": True, "id": str(result.inserted_id), "message": "User created successfully"}
 
 
-def get_user_by_id(db: Database, user_id: str):
+def get_user_by_id(db: Database, id: str):
     """
     Retrieve a user by ID.
     """
-    user = db.users.find_one({"_id": ObjectId(user_id)})
+    user = db.users.find_one({"_id": ObjectId(id)})
 
     if not user:
-        return {"success": False, "error": "User not found"}
+        return False
 
-    return {
-        "success": True,
-        "user": {
-            "id": str(user["_id"]),
-            "email": user["email"],
-            "is_verified": user.get("is_verified", False),
-            "company_name": user["company_name"],
-            "name": user["name"],
-            "phone_number": user["phone_number"],
-            "role": user["role"]
-        }
-    }
+    return user
 
 
-def authenticate_user(db: Database, user_login: UserLogin) -> Dict[str, Any]:
+def authenticate_user(db: Database, user_login: UserLogin):
     """
     Authenticate a user by email and password.
     """
     user = db.users.find_one({"email": user_login.email})
 
     if not user:
-        return {"success": False, "error": "User not found"}
+        return False
 
-    if not bcrypt.checkpw(user_login.password.encode('utf-8'), user["password"].encode('utf-8')):
-        return {"success": False, "error": "Invalid password"}
+    if not bcrypt.checkpw(user_login.password.get_secret_value().encode('utf-8'), user["password"].encode('utf-8')):
+        return False
 
-    return {
-        "success": True,
-        "user": {
-            "user_id": str(user["_id"]),
-            "email": user["email"],
-            "role": user["role"],
-            "is_verified": user.get("is_verified", False),
-            "company_name": user["company_name"],
-            "name": user["name"],
-            "phone_number": user["phone_number"],
-            "role": user["role"]
-        }
-    }
+    return user
+
+
+def create_access_token(data: dict):
+    expire = datetime.now(timezone.utc) + \
+        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    to_encode = {k: str(v) if isinstance(v, ObjectId)
+                 else v for k, v in data.items()}
+    to_encode.update({"exp": expire})
+
+    encoded_jwt = jwt.encode(
+        to_encode,
+        JWT_SECRET_KEY,
+        algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def create_refresh_token(data: dict) -> str:
+    expire = datetime.now(timezone.utc) + \
+        timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
+
+    to_encode = {k: str(v) if isinstance(v, ObjectId)
+                 else v for k, v in data.items()}
+    to_encode.update({"exp": expire})
+
+    encoded_jwt = jwt.encode(
+        to_encode, JWT_REFRESH_SECRET_KEY, ALGORITHM)
+    return encoded_jwt
+
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
+    """
+    Retrieve the current user from the JWT token.
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY,
+                             algorithms=[ALGORITHM])
+        print(payload)
+        return User(**payload)
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except jwt.InvalidTokenError:
+        raise credentials_exception
+
+
+async def get_current_active_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """
+    Ensure the current user is active.
+    """
+    if not current_user.is_verified:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user

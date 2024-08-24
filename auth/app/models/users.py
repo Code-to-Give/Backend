@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Optional
 from bson import ObjectId
 
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, SecretStr, EmailStr
 from pydantic_extra_types.phone_numbers import PhoneNumber
 
 
@@ -22,7 +22,7 @@ class UserBase(BaseModel):
 
 class UserRegister(BaseModel):
     email: EmailStr = Field(max_length=255)
-    password: str = Field(min_length=8, max_length=40)
+    password: SecretStr = Field(min_length=8, max_length=40)
     company_name: str = Field(max_length=255)
     name: str = Field(max_length=255)
     phone_number: PhoneNumber = Field()
@@ -31,7 +31,7 @@ class UserRegister(BaseModel):
 
 class UserLogin(BaseModel):
     email: EmailStr = Field(max_length=255)
-    password: str = Field(min_length=8, max_length=40)
+    password: SecretStr = Field(min_length=8, max_length=40)
 
 
 class UserUpdate(BaseModel):
@@ -54,3 +54,8 @@ class User(UserBase):
 
 class UserAdmin(User):
     is_superuser: bool = False
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
