@@ -1,5 +1,3 @@
-from bson import ObjectId
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from pymongo.database import Database
 
@@ -28,7 +26,7 @@ async def promote_user_to_superuser(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="User is already an admin")
 
-    db.users.update_one({"_id": ObjectId(user_id)}, {
+    db.users.update_one({"_id": user_id}, {
                         "$set": {"is_superuser": True}})
 
     updated_user = userServices.get_user_by_id(db, user_id)
@@ -54,7 +52,7 @@ async def verify_donor(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Only donors can be verified")
 
-    db.users.update_one({"_id": ObjectId(user_id)}, {
+    db.users.update_one({"_id": user_id}, {
                         "$set": {"is_verified": True}})
 
     updated_user = userServices.get_user_by_id(db, user_id)
