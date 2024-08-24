@@ -1,16 +1,16 @@
-from pydantic.dataclasses import dataclass, Field
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 from schemas.FoodType import FoodType
 from schemas.DonationStatus import DonationStatus
 from uuid import UUID, uuid4
 from typing import Dict, Tuple, Optional
 
-@dataclass
-class Donation:
+class Donation(BaseModel):
     donor_id: str
     id: str = Field(default_factory=lambda: str(uuid4()))
     items: Dict[str, int] = Field(default_factory=dict)
     location: Tuple[float, float] = (0.0, 0.0)
     status: str = DonationStatus.READY
-    agency_id: str = "None"
+    agency_id: str = ""
+    
+    model_config = ConfigDict(from_attributes=True)
     

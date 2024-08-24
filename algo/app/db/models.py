@@ -39,7 +39,7 @@ class DonationModel(Base):
     items = Column(JSON, nullable=False)
     location = Column(JSON, nullable=False, default=lambda: [0.0, 0.0])
     status = Column(SqlEnum(DonationStatus), default=DonationStatus.READY)
-    agency_id = Column(String, ForeignKey("agencies.id"), nullable=True)
+    agency_id = Column(String, default="")
 
     def __repr__(self):
         return f"<Donation(id={self.id}, donor_id={self.donor_id}, status={self.status})>"
