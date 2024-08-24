@@ -8,6 +8,8 @@ services:
       - "8000:8000"
     volumes:
       - ./auth/app:/app
+    env_file:
+      - .env
 
   algo:
     build:
