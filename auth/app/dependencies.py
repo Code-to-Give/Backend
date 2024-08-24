@@ -1,7 +1,9 @@
+import os
+# import jwt
+
 from pymongo.mongo_client import MongoClient
 from pymongo.database import Database
 from fastapi import Depends
-import os
 
 
 def get_mongo_client() -> MongoClient:

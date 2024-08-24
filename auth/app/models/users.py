@@ -1,7 +1,9 @@
-from bson import ObjectId
-from pydantic import BaseModel, Field, SecretStr, EmailStr
-from pydantic_extra_types.phone_numbers import PhoneNumber
 from enum import Enum
+from typing import Optional
+from bson import ObjectId
+
+from pydantic import BaseModel, Field, EmailStr
+from pydantic_extra_types.phone_numbers import PhoneNumber
 
 
 class Role(str, Enum):
@@ -20,11 +22,27 @@ class UserBase(BaseModel):
 
 class UserRegister(BaseModel):
     email: EmailStr = Field(max_length=255)
-    password: SecretStr = Field(min_length=8, max_length=40)
+    password: str = Field(min_length=8, max_length=40)
     company_name: str = Field(max_length=255)
     name: str = Field(max_length=255)
     phone_number: PhoneNumber = Field()
     role: Role = Field()
+
+
+class UserLogin(BaseModel):
+    email: EmailStr = Field(max_length=255)
+    password: str = Field(min_length=8, max_length=40)
+
+
+class UserUpdate(BaseModel):
+    company_name: Optional[str] = Field(None, max_length=255)
+    name: Optional[str] = Field(None, max_length=255)
+    phone_number: Optional[PhoneNumber] = Field(None)
+
+
+class UpdatePassword(BaseModel):
+    current_password: str = Field(min_length=8, max_length=40)
+    new_password: str = Field(min_length=8, max_length=40)
 
 
 class User(UserBase):
