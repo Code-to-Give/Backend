@@ -1,15 +1,16 @@
 import bcrypt
 import jwt
 import os
+from uuid import uuid4, UUID
 
-from bson import ObjectId
 from typing import Dict, Any, Annotated
 from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 from pymongo.database import Database
 
-from models.users import UserRegister, UserLogin, User, Role
+from dependencies import get_database
+from models.users import UserRegister, UserLogin, User, Role, TokenData
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
@@ -38,6 +39,7 @@ def create_user(db: Database, user: UserRegister) -> Dict[str, Any]:
         is_verified = False
 
     user = {
+        "_id": str(uuid4()),
         "email": user.email,
         "password": hashed_password.decode('utf-8'),
         "company_name": user.company_name,
@@ -60,12 +62,12 @@ def get_user_by_id(db: Database, id: str) -> User:
     """
     Retrieve a user by ID.
     """
-    user = db.users.find_one({"_id": ObjectId(id)})
+    user = db.users.find_one({"_id": id})
 
     if not user:
         return False
 
-    user["_id"] = str(user["_id"])
+    user["_id"] = UUID(user["_id"])
 
     return User(**user)
 
@@ -82,40 +84,57 @@ def authenticate_user(db: Database, user_login: UserLogin):
     if not bcrypt.checkpw(user_login.password.get_secret_value().encode('utf-8'), user["password"].encode('utf-8')):
         return False
 
-    user["_id"] = str(user["_id"])
+    user["_id"] = UUID(user["_id"])
 
     return User(**user)
 
 
-def create_access_token(data: dict):
+def create_access_token(user: User):
     expire = datetime.now(timezone.utc) + \
         timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    to_encode = {k: str(v) if isinstance(v, ObjectId)
-                 else v for k, v in data.items()}
-    to_encode.update({"exp": expire})
+    token_data = TokenData(
+        sub=user.id,
+        email=user.email,
+        role=user.role,
+        is_verified=user.is_verified,
+        is_superuser=user.is_superuser,
+        exp=expire,
+    )
+
+    payload = token_data.dict()
+    payload['sub'] = str(payload['sub'])
 
     encoded_jwt = jwt.encode(
-        to_encode,
+        payload,
         JWT_SECRET_KEY,
         algorithm=ALGORITHM)
     return encoded_jwt
 
 
-def create_refresh_token(data: dict) -> str:
+def create_refresh_token(user: User) -> str:
     expire = datetime.now(timezone.utc) + \
         timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
 
-    to_encode = {k: str(v) if isinstance(v, ObjectId)
-                 else v for k, v in data.items()}
-    to_encode.update({"exp": expire})
+    token_data = TokenData(
+        sub=user.id,
+        email=user.email,
+        role=user.role,
+        is_verified=user.is_verified,
+        is_superuser=user.is_superuser,
+        exp=expire,
+    )
+    payload = token_data.dict()
+    payload['sub'] = str(payload['sub'])
 
     encoded_jwt = jwt.encode(
-        to_encode, JWT_REFRESH_SECRET_KEY, ALGORITHM)
+        payload,
+        JWT_SECRET_KEY,
+        algorithm=ALGORITHM)
     return encoded_jwt
 
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Database = Depends(get_database)) -> User:
     """
     Retrieve the current user from the JWT token.
     """
@@ -128,8 +147,24 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> Use
     try:
         payload = jwt.decode(token, JWT_SECRET_KEY,
                              algorithms=[ALGORITHM])
-        print(payload)
-        return User(**payload)
+
+        user_id = UUID(payload['sub'])
+
+        user = db.users.find_one({"_id": str(user_id)})
+
+        if not user:
+            raise credentials_exception
+
+        return User(
+            id=user_id,
+            email=user['email'],
+            company_name=user.get('company_name', ''),
+            name=user.get('name', ''),
+            phone_number=user.get('phone_number', ''),
+            role=Role(user['role']) if user.get('role') else None,
+            is_verified=user.get('is_verified', False),
+            is_superuser=user.get('is_superuser', False)
+        )
 
     except jwt.ExpiredSignatureError:
         raise HTTPException(

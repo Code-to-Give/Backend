@@ -1,6 +1,8 @@
 from enum import Enum
+from uuid import uuid4, UUID
 from typing import Optional
-from bson import ObjectId
+from datetime import datetime
+
 
 from pydantic import BaseModel, Field, SecretStr, EmailStr
 from pydantic_extra_types.phone_numbers import PhoneNumber
@@ -47,12 +49,22 @@ class UpdatePassword(BaseModel):
 
 
 class User(UserBase):
-    id: str = Field(default_factory=lambda: str(ObjectId()), alias="_id")
+    id: UUID = Field(default_factory=uuid4, alias="_id")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class TokenData(BaseModel):
+    sub: UUID = Field(..., description="The unique identifier for the user")
+    email: EmailStr = Field(..., description="The user's email address")
+    role: Optional[Role] = Field(None, description="The user's role")
+    is_verified: bool = Field(..., description="Whether the user is verified")
+    is_superuser: bool = Field(...,
+                               description="Whether the user has superuser privileges")
+    exp: datetime = Field(..., description="Expiration time of the token")

@@ -25,7 +25,7 @@ app.add_middleware(
 @app.on_event('startup')
 def startup_db_client():
     mongodb_uri = os.getenv('MONGODB_URI')
-    db_name = os.getenv('DB_NAME')
+    db_name = os.getenv('AUTH_DB_NAME')
 
     if not mongodb_uri or not db_name:
         raise ValueError(
