@@ -12,5 +12,5 @@ def get_mongo_client() -> MongoClient:
 
 
 def get_database(client: MongoClient = Depends(get_mongo_client)) -> Database:
-    db_name = os.getenv('DB_NAME')
+    db_name = os.getenv('AUTH_DB_NAME')
     return client[db_name]
