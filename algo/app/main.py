@@ -21,6 +21,20 @@ def create_agency(agency: Agency, db: Session = Depends(get_db)):
     db.refresh(db_agency)
     return {"id": db_agency.id, "name": db_agency.name, "message": "Agency created successfully"}
 
+@app.post("/agencies/")
+def create_agency(agency: Agency, db: Session = Depends(get_db)):
+    db_agency = AgencyModel(
+        id=str(uuid4()),
+        name=agency.name,
+        requirements=agency.requirements,
+        priority_flag=agency.priority_flag,
+        location=agency.location
+    )
+    db.add(db_agency)
+    db.commit()
+    db.refresh(db_agency)
+    return {"id": db_agency.id, "name": db_agency.name, "message": "Agency created successfully"}
+
 @app.get("/agencies/{agency_id}")
 def read_agency(agency_id: str, db: Session = Depends(get_db)):
     db_agency = db.query(AgencyModel).filter(AgencyModel.id == agency_id).first()
