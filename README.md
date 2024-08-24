@@ -36,3 +36,141 @@
 
 - `8000`: Authentication service
 - `8001`: Algorithm service
+
+## Endpoints
+
+### Auth
+
+There are two routes in `Auth`:
+
+1. Users
+1. Admin
+
+**Users**
+
+Base URL: `http://localhost:8000/users`
+
+---
+
+**POST `/register`**
+
+_Parameters_
+
+| Name           | Required     | Type                        | Description                                        |
+| -------------- | ------------ | --------------------------- | -------------------------------------------------- |
+| `email`        | required     | string                      | Organisation's email                               |
+| `password`     | required     | string                      | Password                                           |
+| `company_name` | required     | string                      | Name of the organisation                           |
+| `name`         | required     | string                      | Name of the user                                   |
+| `phone_number` | required     | string                      | Phone number with country code                     |
+| `role`         | not required | Role (Donor or Beneficiary) | This is not required as the user could be an admin |
+
+_Response_
+
+| Name           | Type                        | Description                                           |
+| -------------- | --------------------------- | ----------------------------------------------------- |
+| `_id`          | UUID                        | Unique identifer to be used across services           |
+| `email`        | string                      | Organisation's email                                  |
+| `password`     | string                      | Password                                              |
+| `company_name` | string                      | Name of the organisation                              |
+| `name`         | string                      | Name of the user                                      |
+| `phone_number` | string                      | Phone number with country code                        |
+| `is_verified`  | Boolean                     | Only for donors, it will be False on first register   |
+| `is_superuser` | Boolean                     | If is_superuser, there will be no role                |
+| `role`         | Role (Donor or Beneficiary) | This is not required as the user could be a superuser |
+
+---
+
+**POST `/login`**
+
+_Parameters_
+
+| Name       | Required | Type   | Description          |
+| ---------- | -------- | ------ | -------------------- |
+| `email`    | required | string | Organisation's email |
+| `password` | required | string | Password             |
+
+_Response_
+
+| Name           | Type   | Description                       |
+| -------------- | ------ | --------------------------------- |
+| `access_token` | string | A signed JWT (expires in 30 mins) |
+| `token_type`   | string | Always Bearer (can ignore)        |
+
+---
+
+**GET `/me`**
+
+_Authorisation required_: Send with JWT from `/login`
+
+_Parameters_: None
+
+_Response_
+
+| Name           | Type                        | Description                                           |
+| -------------- | --------------------------- | ----------------------------------------------------- |
+| `_id`          | UUID                        | Unique identifer to be used across services           |
+| `email`        | string                      | Organisation's email                                  |
+| `password`     | string                      | Password                                              |
+| `company_name` | string                      | Name of the organisation                              |
+| `name`         | string                      | Name of the user                                      |
+| `phone_number` | string                      | Phone number with country code                        |
+| `is_verified`  | Boolean                     | Only for donors, it will be False on first register   |
+| `is_superuser` | Boolean                     | If is_superuser, there will be no role                |
+| `role`         | Role (Donor or Beneficiary) | This is not required as the user could be a superuser |
+
+---
+
+**Admin**
+
+Base URL: `http://localhost:8000/admin`
+
+---
+
+**POST `/promote/:user_id`**
+
+Changes from `is_superuser` of the `:user_id` to True
+
+_Authorisation required_: Send with JWT from `/login` and has to be `is_superuser = True`
+
+_Parameters_: None
+
+_Response_
+
+| Name           | Type                        | Description                                           |
+| -------------- | --------------------------- | ----------------------------------------------------- |
+| `_id`          | UUID                        | Unique identifer to be used across services           |
+| `email`        | string                      | Organisation's email                                  |
+| `password`     | string                      | Password                                              |
+| `company_name` | string                      | Name of the organisation                              |
+| `name`         | string                      | Name of the user                                      |
+| `phone_number` | string                      | Phone number with country code                        |
+| `is_verified`  | Boolean                     | Only for donors, it will be False on first register   |
+| `is_superuser` | Boolean                     | If is_superuser, there will be no role                |
+| `role`         | Role (Donor or Beneficiary) | This is not required as the user could be a superuser |
+
+---
+
+**POST `/verify-donor/:user_id`**
+
+Changes from `is_verified` of the `:user_id` to True
+
+_Authorisation required_: Send with JWT from `/login` and has to be `is_superuser = True`
+
+_Parameters_: None
+
+_Response_
+
+| Name           | Type                        | Description                                           |
+| -------------- | --------------------------- | ----------------------------------------------------- |
+| `_id`          | UUID                        | Unique identifer to be used across services           |
+| `email`        | string                      | Organisation's email                                  |
+| `password`     | string                      | Password                                              |
+| `company_name` | string                      | Name of the organisation                              |
+| `name`         | string                      | Name of the user                                      |
+| `phone_number` | string                      | Phone number with country code                        |
+| `is_verified`  | Boolean                     | Only for donors, it will be False on first register   |
+| `is_superuser` | Boolean                     | If is_superuser, there will be no role                |
+| `role`         | Role (Donor or Beneficiary) | This is not required as the user could be a superuser |
+
+---
