@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Request, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pymongo.database import Database
 
 from dependencies import get_database
@@ -24,10 +24,7 @@ async def register_user(user_create: UserRegister, db: Database = Depends(get_da
 
     return {
         "id": response["user_id"],
-        "full_name": user_create.full_name,
         "email": user_create.email,
-        "is_verified": False,
-        "is_superuser": False,
     }
 
 

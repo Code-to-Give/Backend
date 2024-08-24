@@ -17,9 +17,12 @@ def create_user(db: Database, user: UserRegister) -> Dict[str, Any]:
         user.password.get_secret_value().encode('utf-8'), bcrypt.gensalt())
 
     user = {
-        "full_name": user.full_name,
         "email": user.email,
-        "password": hashed_password.decode('utf-8')
+        "password": hashed_password.decode('utf-8'),
+        "company_name": user.company_name,
+        "name": user.name,
+        "phone_number": user.phone_number,
+        "role": user.role
     }
 
     try:
@@ -43,9 +46,12 @@ def get_user_by_id(db: Database, user_id: str):
         "success": True,
         "user": {
             "id": str(user["_id"]),
-            "full_name": user.get("full_name"),
             "email": user["email"],
             "is_verified": user.get("is_verified", False),
             "is_superuser": user.get("is_superuser", False),
+            "company_name": user["company_name"],
+            "name": user["name"],
+            "phone_number": user["phone_number"],
+            "role": user["role"]
         }
     }

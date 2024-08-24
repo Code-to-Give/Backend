@@ -27,8 +27,10 @@ MarkupSafe==2.1.5
 mdurl==0.1.2
 numpy==1.26.3
 pandas==2.1.4
+phonenumbers==8.13.43
 platformdirs==3.11.0
 pydantic==2.8.2
+pydantic-extra-types==2.9.0
 pydantic_core==2.20.1
 Pygments==2.18.0
 pyinstaller==5.13.0
