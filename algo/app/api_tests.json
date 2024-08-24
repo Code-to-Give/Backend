@@ -1,0 +1,212 @@
+{
+	"info": {
+		"_postman_id": "0595732f-2a20-4ed0-a87b-5858fafe19d1",
+		"name": "Food Donation API Tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "37890078"
+	},
+	"item": [
+		{
+			"name": "Agencies",
+			"item": [
+				{
+					"name": "Create Agency 1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"agency-001\",\n  \"name\": \"Food from the Heart\",\n  \"requirements\": {\"Halal\": 200, \"Non-Halal\": 100, \"Vegetarian\": 150},\n  \"priority_flag\": false,\n  \"location\": [1.3521, 103.8198]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/agencies",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"agencies"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Agencies",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/agencies",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"agencies"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Agency by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/agencies/agency-001",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"agencies",
+								"agency-001"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Donors",
+			"item": [
+				{
+					"name": "Create Donor 1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"donor-001\",\n  \"name\": \"NTUC FairPrice\",\n  \"location\": [1.3521, 103.8198],\n  \"donations\": 0.0\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/donors",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"donors"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Donors",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/donors",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"donors"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Donations",
+			"item": [
+				{
+					"name": "Create Donation 1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"donation-001\",\n  \"donor_id\": \"donor-001\",\n  \"items\": {\"Halal\": 100, \"Non-Halal\": 50, \"Vegetarian\": 75},\n  \"location\": [1.3521, 103.8198],\n  \"status\": \"Ready\",\n  \"agency_id\": null\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/donations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"donations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Donations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/donations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"donations"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
