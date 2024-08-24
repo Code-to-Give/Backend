@@ -8,6 +8,6 @@ from typing import Dict, Tuple
 class Agency:
     name: str
     id: str = Field(default_factory=lambda: str(uuid4()))
-    requirements: Dict[FoodType, int] = Field(default_factory=dict)
+    requirements: Dict[str, int] = Field(default_factory=dict)
     priority_flag: bool = False
     location: Tuple[float, float] = (0.0, 0.0)
