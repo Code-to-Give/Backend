@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 
 from routes.userRoutes import router as user_router
 from routes.adminRoutes import router as admin_router
@@ -32,7 +33,7 @@ def startup_db_client():
             "MONGODB_URI and DB_NAME must be set in the environment variables.")
 
     # Create a new client and connect to the server
-    app.mongodb_client = MongoClient(mongodb_uri)
+    app.mongodb_client = MongoClient(mongodb_uri, server_api=ServerApi('1'))
     app.database = app.mongodb_client[db_name]
 
     # Send a ping to confirm a successful connection
