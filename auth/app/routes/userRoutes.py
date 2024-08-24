@@ -46,7 +46,7 @@ async def login(user_login: UserLogin, db: Database = Depends(get_database)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token = userServices.create_access_token(user)
+    access_token = userServices.create_access_token(user.dict())
 
     return Token(access_token=access_token, token_type="Bearer")
 
