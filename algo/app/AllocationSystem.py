@@ -33,12 +33,13 @@ class AllocationSystem(BaseModel):
                 accepted = await asyncio.wait_for(self.send_allocation_request(agency, donation), timeout=self.request_timeout)
                 if accepted:
                     print(f"Donation {donation.id} accepted by Agency {agency.id}")
+                    donation.status = DonationStatus.ACCEPTED
                     return agency.id
                 else:
                     print(f"Donation {donation.id} rejected by Agency {agency.id}. Moving to next agency.")
             except asyncio.TimeoutError:
                 print(f"Allocation request to Agency {agency.id} timed out. Moving to next agency.")
-        
+        donation.status = DonationStatus.READY
         print("No response.")
         return None
     
@@ -71,7 +72,7 @@ async def test():
     },
     location=(1.3, 104),
     status=DonationStatus.READY,
-    agency_id=None, # No agency assigned yet
+    agency_id="None", # No agency assigned yet
     )
     
     # sample agencies
