@@ -4,9 +4,9 @@ from fastapi import FastAPI
 from dotenv import load_dotenv
 
 from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
 
 from routes.userRoutes import router as user_router
+from routes.adminRoutes import router as admin_router
 
 load_dotenv()
 
@@ -44,3 +44,4 @@ async def health():
     return {"message": "Authentication service is up and running!"}
 
 app.include_router(user_router)
+app.include_router(admin_router)

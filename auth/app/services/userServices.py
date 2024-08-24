@@ -7,11 +7,9 @@ from typing import Dict, Any, Annotated
 from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
-from jwt.exceptions import InvalidTokenError
 from pymongo.database import Database
 
-from dependencies import get_database
-from models.users import UserRegister, UserLogin, User
+from models.users import UserRegister, UserLogin, User, Role
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
@@ -34,6 +32,11 @@ def create_user(db: Database, user: UserRegister) -> Dict[str, Any]:
     hashed_password = bcrypt.hashpw(
         user.password.get_secret_value().encode('utf-8'), bcrypt.gensalt())
 
+    if user.role != Role.donor:
+        is_verified = True
+    else:
+        is_verified = False
+
     user = {
         "email": user.email,
         "password": hashed_password.decode('utf-8'),
@@ -41,7 +44,8 @@ def create_user(db: Database, user: UserRegister) -> Dict[str, Any]:
         "name": user.name,
         "phone_number": user.phone_number,
         "role": user.role,
-        "is_verified": True
+        "is_verified": is_verified,
+        "is_superuser": False
     }
 
     try:
@@ -52,7 +56,7 @@ def create_user(db: Database, user: UserRegister) -> Dict[str, Any]:
     return {"success": True, "id": str(result.inserted_id), "message": "User created successfully"}
 
 
-def get_user_by_id(db: Database, id: str):
+def get_user_by_id(db: Database, id: str) -> User:
     """
     Retrieve a user by ID.
     """
@@ -61,7 +65,9 @@ def get_user_by_id(db: Database, id: str):
     if not user:
         return False
 
-    return user
+    user["_id"] = str(user["_id"])
+
+    return User(**user)
 
 
 def authenticate_user(db: Database, user_login: UserLogin):
@@ -76,7 +82,9 @@ def authenticate_user(db: Database, user_login: UserLogin):
     if not bcrypt.checkpw(user_login.password.get_secret_value().encode('utf-8'), user["password"].encode('utf-8')):
         return False
 
-    return user
+    user["_id"] = str(user["_id"])
+
+    return User(**user)
 
 
 def create_access_token(data: dict):
@@ -139,6 +147,19 @@ async def get_current_active_user(
     """
     Ensure the current user is active.
     """
-    if not current_user.is_verified:
-        raise HTTPException(status_code=400, detail="Inactive user")
+    if current_user.role == Role.donor and not current_user.is_verified:
+        raise HTTPException(
+            status_code=400, detail="Your account has not been verified")
+    return current_user
+
+
+async def get_current_active_superuser(
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """
+    Ensure the current user is active.
+    """
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Insufficient permissions")
     return current_user

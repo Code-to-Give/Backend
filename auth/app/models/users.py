@@ -14,10 +14,11 @@ class Role(str, Enum):
 class UserBase(BaseModel):
     email: EmailStr = Field(max_length=255)
     is_verified: bool = False
+    is_superuser: bool = False
     company_name: str = Field(max_length=255)
     name: str = Field(max_length=255)
     phone_number: PhoneNumber = Field()
-    role: Role = Field()
+    role: Optional[Role] = Field(None)
 
 
 class UserRegister(BaseModel):
@@ -26,7 +27,7 @@ class UserRegister(BaseModel):
     company_name: str = Field(max_length=255)
     name: str = Field(max_length=255)
     phone_number: PhoneNumber = Field()
-    role: Role = Field()
+    role: Optional[Role] = Field(None)
 
 
 class UserLogin(BaseModel):
@@ -50,10 +51,6 @@ class User(UserBase):
 
     class Config:
         orm_mode = True
-
-
-class UserAdmin(User):
-    is_superuser: bool = False
 
 
 class Token(BaseModel):

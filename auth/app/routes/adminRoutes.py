@@ -1,56 +1,61 @@
-from typing import List
+from bson import ObjectId
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pymongo.database import Database
 
 from dependencies import get_database
-from models.users import User, UserRegister, UserUpdate, UpdatePassword, UserLogin
-from Backend.auth.app.services.userServices import create_user, get_user_by_id
+from models.users import User, Role
+from services import userServices
 
 router = APIRouter(prefix="/admin", tags=['admin'])
 
 
-@router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
-async def register_user(user_create: UserRegister, db: Database = Depends(get_database)):
+@router.post("/promote/{user_id}", response_model=User)
+async def promote_user_to_superuser(
+    user_id: str,
+    db: Database = Depends(get_database),
+    current_user: User = Depends(userServices.get_current_active_superuser)
+):
     """
-    Controller to register a new user.
-    Calls the create_user service and handles the response.
+    Admins only. Promote a user to superuser.
     """
-    response = create_user(db, user_create)
-
-    if not response["success"]:
+    user = userServices.get_user_by_id(db, user_id)
+    if not user:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=response["error"])
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    return {
-        "id": response["user_id"],
-        "email": user_create.email,
-    }
-
-
-@router.get("/{user_id}", response_model=User)
-async def get_user(user_id: str, db: Database = Depends(get_database)):
-    """
-    Controller to get a user by ID.
-    """
-    response = get_user_by_id(db, user_id)
-
-    if not response["success"]:
+    if user.is_superuser:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=response["error"])
+            status_code=status.HTTP_400_BAD_REQUEST, detail="User is already an admin")
 
-    return response["user"]
+    db.users.update_one({"_id": ObjectId(user_id)}, {
+                        "$set": {"is_superuser": True}})
+
+    updated_user = userServices.get_user_by_id(db, user_id)
+    return updated_user
 
 
-@router.put("/{user_id}")
-async def update_user_info(user_id: str, updates: UserUpdate, db: Database = Depends(get_database)):
-    pass
+@router.post("/verify-donor/{user_id}", response_model=User)
+async def verify_donor(
+    user_id: str,
+    db: Database = Depends(get_database),
+    current_user: User = Depends(userServices.get_current_active_superuser)
+):
+    """
+    Admins only. Verify a donor.
+    """
+    user = userServices.get_user_by_id(db, user_id)
+    print("ver", user.role)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
+    if user.role != Role.donor:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Only donors can be verified")
 
-@router.post("/login")
-async def login(user_login: UserLogin, db: Database = Depends(get_database)):
-    pass
+    db.users.update_one({"_id": ObjectId(user_id)}, {
+                        "$set": {"is_verified": True}})
 
-# @router.put("/{}")
-# async def update_password(update_password: UpdatePassword, current_user: CurrentUser, db: Database = Depends(get_database)):
-#     pass
+    updated_user = userServices.get_user_by_id(db, user_id)
+    return updated_user

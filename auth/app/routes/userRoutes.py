@@ -2,8 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pymongo.database import Database
 
 from dependencies import get_database
-from models.users import User, UserRegister, Token, UpdatePassword, UserLogin
-from services.userServices import create_user, get_user_by_id, authenticate_user
+from models.users import User, UserRegister, Token, UserLogin
 from services import userServices
 
 router = APIRouter(prefix="/users", tags=['users'])
@@ -15,7 +14,7 @@ async def register_user(user_create: UserRegister, db: Database = Depends(get_da
     Controller to register a new user.
     Calls the create_user service and handles the response.
     """
-    response = create_user(db, user_create)
+    response = userServices.create_user(db, user_create)
 
     if not response["success"]:
         raise HTTPException(
@@ -28,7 +27,8 @@ async def register_user(user_create: UserRegister, db: Database = Depends(get_da
         "name": user_create.name,
         "phone_number": user_create.phone_number,
         "role": user_create.role,
-        "is_verified": False
+        "is_verified": False,
+        "is_superuser": False
     }
 
 
@@ -37,7 +37,7 @@ async def login(user_login: UserLogin, db: Database = Depends(get_database)):
     """
     Authenticate a user by their email and password.
     """
-    user = authenticate_user(db, user_login)
+    user = userServices.authenticate_user(db, user_login)
 
     if not user:
         raise HTTPException(
