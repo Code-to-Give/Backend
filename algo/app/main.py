@@ -8,9 +8,9 @@ from uuid import uuid4
 app = FastAPI()
 
 @app.post("/agencies/")
-def create_agency(agency: Agency, db: Session = Depends(get_db)):
+def create_agency_by_id(agency: Agency, db: Session = Depends(get_db)):
     db_agency = AgencyModel(
-        id=str(uuid4()),
+        id=agency.id,
         name=agency.name,
         requirements=agency.requirements,
         priority_flag=agency.priority_flag,
