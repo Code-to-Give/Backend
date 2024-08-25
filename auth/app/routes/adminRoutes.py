@@ -5,7 +5,7 @@ from dependencies import get_database
 from models.users import User, Role
 from services import userServices
 
-router = APIRouter(prefix="/admin", tags=['admin'])
+router = APIRouter(prefix="/api/admin", tags=['admin'])
 
 
 @router.post("/promote/{user_id}", response_model=User)
