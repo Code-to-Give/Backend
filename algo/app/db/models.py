@@ -68,3 +68,10 @@ class RequirementModel(Base):
     __table_args__ = (
         UniqueConstraint('agency_id', 'food_type', name='uq_agency_food_type'),
     )
+    
+class VolunteerModel(Base):
+    __tablename__ = "volunteers"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True)
+    location = Column(JSON, nullable=False, default=lambda: [0.0, 0.0])
+    capacity = Column(Integer, nullable=False)

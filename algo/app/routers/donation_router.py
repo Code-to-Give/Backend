@@ -121,6 +121,7 @@ async def create_donation_as_me(
     requirements = await fetch_requirements(db)
     await allocation_system.allocate_donation(donation, agencies)
 
+    return donation
 
 @router.post("/donations", response_model=Donation)
 async def create_donation(donation: Donation, request: Request, db: AsyncSession = Depends(get_db)
