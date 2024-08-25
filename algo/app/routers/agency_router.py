@@ -33,29 +33,44 @@ async def create_agency(
         db: AsyncSession = Depends(get_db),
         current_user=Depends(get_current_user)):
 
-    if current_user["role"] != "Beneficiary":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authorized to create an agency."
+    try:
+        # Authorization check
+        if current_user["role"] != "Beneficiary":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authorized to create an agency."
+            )
+
+        # Check if a company_name matches name
+        result = await db.execute(select(AgencyModel).filter_by(name=current_user["company_name"]))
+        existing_agency = result.scalars().first()
+
+        # If a match is found, return the existing agency
+        if existing_agency:
+            return existing_agency
+
+        # Create a new agency
+        agency = AgencyModel(
+            name=current_user["company_name"]
         )
 
-    # check if a company_name matches name
-    result = await db.execute(select(AgencyModel).filter_by(name=current_user["company_name"]))
-    existing_agency = result.scalars().first()
+        # db_agency = AgencyModel(**agency.model_dump())
+        db.add(agency)
+        await db.commit()
+        await db.refresh(agency)
 
-    # if matches then dont create
-    if existing_agency:
-        return existing_agency
+        return Agency.model_validate(agency)
 
-    agency = AgencyModel(
-        name=current_user["company_name"]
-    )
+    except HTTPException as e:
+        print(f"HTTP error: {str(e)}")
+        raise e
 
-    db_agency = AgencyModel(**agency.model_dump())
-    db.add(db_agency)
-    await db.commit()
-    await db.refresh(db_agency)
-    return Agency.model_validate(db_agency)
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred."
+        )
 
 
 @router.get("/agencies", response_model=List[Agency])
@@ -90,6 +105,7 @@ async def read_agency(agency_id: UUID, db: AsyncSession = Depends(get_db)):
     if agency is None:
         raise HTTPException(status_code=404, detail="Agency not found")
     return Agency.model_validate(agency)
+
 
 @router.put("/agencies/{agency_id}", response_model=Agency)
 async def update_agency(agency_id: UUID, agency: Agency, db: AsyncSession = Depends(get_db)):
