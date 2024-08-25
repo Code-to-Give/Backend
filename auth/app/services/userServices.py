@@ -1,4 +1,5 @@
 import bcrypt
+import base64
 import jwt
 import os
 from uuid import uuid4, UUID
@@ -16,11 +17,16 @@ from models.users import UserRegister, UserLogin, User, Role, TokenData
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
 
-ALGORITHM = "HS256"
+# ALGORITHM = "HS256"
+ALGORITHM = "RS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 JWT_REFRESH_SECRET_KEY = os.getenv("JWT_REFRESH_SECRET_KEY")
+
+JWT_PRIVATE_KEY = base64.b64decode(
+    os.getenv("JWT_PRIVATE_KEY")).decode('utf-8')
+JWT_PUBLIC_KEY = base64.b64decode(os.getenv("JWT_PUBLIC_KEY")).decode('utf-8')
 
 
 def create_user(db: Database, user: UserRegister) -> Dict[str, Any]:
@@ -107,7 +113,7 @@ def create_access_token(user: User):
 
     encoded_jwt = jwt.encode(
         payload,
-        JWT_SECRET_KEY,
+        JWT_PRIVATE_KEY,
         algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -129,7 +135,7 @@ def create_refresh_token(user: User) -> str:
 
     encoded_jwt = jwt.encode(
         payload,
-        JWT_SECRET_KEY,
+        JWT_PRIVATE_KEY,
         algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -145,7 +151,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Da
     )
 
     try:
-        payload = jwt.decode(token, JWT_SECRET_KEY,
+        payload = jwt.decode(token, JWT_PUBLIC_KEY,
                              algorithms=[ALGORITHM])
 
         user_id = UUID(payload['sub'])
