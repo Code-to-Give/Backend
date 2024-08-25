@@ -64,7 +64,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     sub: UUID = Field(..., description="The unique identifier for the user")
     email: EmailStr = Field(..., description="The user's email address")
-    company_name: str = Field(max_length=255)
+    company_name: Optional[str] = Field(None, max_length=255)
     name: str = Field(max_length=255)
     role: Optional[Role] = Field(None, description="The user's role")
     is_verified: bool = Field(..., description="Whether the user is verified")
