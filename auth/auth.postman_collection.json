@@ -1,0 +1,375 @@
+{
+	"info": {
+		"_postman_id": "2e7b84b0-f2c8-4619-be1e-a917073f3a4b",
+		"name": "code to give 2024",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3592566"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Users",
+					"item": [
+						{
+							"name": "Get me",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyYjVjNmVhMy1mYzcwLTQyMWItYTA0Yy02ZDI3OWExMWQyMjUiLCJlbWFpbCI6IkJlbmVmaWNpYXJ5QGl3YW50dG9lYXQuY29tIiwicm9sZSI6IkJlbmVmaWNpYXJ5IiwiaXNfdmVyaWZpZWQiOnRydWUsImlzX3N1cGVydXNlciI6ZmFsc2UsImV4cCI6MTcyNDU1NzQ0M30.dqDpwlZx1A_hSJncSmtrrR0hPxrEhjM2ZuplYYfF1CPWPA4tS4Qp2gx-AQIPVUm4TXix1FM4wa3FqBuc4eZZDdc965qwI_lXhsuFDMy0GBlIOCMBIOCXwxkYeaMSEcX7M3mcAmMDjCzcpXIjOqz9dend-JVc2vJ0fu7oTCDnt4o4ac6sS9ZGuhqDMNg--5pjCrp4TcXX-Fk_6iRrizxczFOenE0xjhTKrpCNZAIh0FiYGQw7LS40_J2_o8nGUbUwnCcrvtGqUpF9xSdujWg0Xproo82ANUQ9GBNIgiterPljHHneMb1vI8l-8-8nHa5Gu1lAkZm3vNQ9aH85Ls2PPg",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "token",
+										"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjQ0NzA3NzMsInN1YiI6InsndXNlcl9pZCc6ICc2NmM5M2QxZDU0NzEzNzUwM2I1OTg1NWQnLCAnZW1haWwnOiAndGUyczIydEBleGFtcGxlLmNvbScsICdyb2xlJzogJ0Rvbm9yJywgJ2lzX3ZlcmlmaWVkJzogRmFsc2UsICdjb21wYW55X25hbWUnOiAndGVzdCBjbycsICduYW1lJzogJ3dvcmtlcicsICdwaG9uZV9udW1iZXInOiAndGVsOis2NS02NTY1LTY1NjUnfSJ9.TlghXi0iCeieLif6rzFlnxxQ2HR4xYTLHkAkx4-IwBk",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"url": {
+									"raw": "http://localhost:8000/api/users/me",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"users",
+										"me"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Register a user",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\":\"admin@foodbank.com\",\n    \"password\": \"Admin1234!\",\n    \"company_name\": \"Foodbank Singapore\",\n    \"name\": \"Admin\",\n    \"phone_number\": \"+6598765432\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/users/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"users",
+										""
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Register a donor",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"email\":\"donor@goodfood.com\",\n    \"password\": \"donor123!\",\n    \"company_name\": \"Goodfood Singapore\",\n    \"name\": \"Employee 1\",\n    \"phone_number\": \"+6565656565\",\n    \"role\": \"Donor\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8000/api/users/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"users",
+												""
+											]
+										}
+									},
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "date",
+											"value": "Sat, 24 Aug 2024 08:09:32 GMT"
+										},
+										{
+											"key": "server",
+											"value": "uvicorn"
+										},
+										{
+											"key": "content-length",
+											"value": "202"
+										},
+										{
+											"key": "content-type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"email\": \"admin@foodbank.com\",\n    \"is_verified\": false,\n    \"is_superuser\": false,\n    \"company_name\": \"Foodbank Singapore\",\n    \"name\": \"Admin\",\n    \"phone_number\": \"tel:+65-9876-5432\",\n    \"role\": null,\n    \"_id\": \"66c9953d1a174a0b958c656c\"\n}"
+								},
+								{
+									"name": "Register a superuser",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"email\":\"admin@foodbank.com\",\n    \"password\": \"Admin1234!\",\n    \"company_name\": \"Foodbank Singapore\",\n    \"name\": \"Admin\",\n    \"phone_number\": \"+6598765432\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8000/api/users/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"users",
+												""
+											]
+										}
+									},
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "date",
+											"value": "Sat, 24 Aug 2024 08:09:32 GMT"
+										},
+										{
+											"key": "server",
+											"value": "uvicorn"
+										},
+										{
+											"key": "content-length",
+											"value": "202"
+										},
+										{
+											"key": "content-type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"email\": \"admin@foodbank.com\",\n    \"is_verified\": false,\n    \"is_superuser\": false,\n    \"company_name\": \"Foodbank Singapore\",\n    \"name\": \"Admin\",\n    \"phone_number\": \"tel:+65-9876-5432\",\n    \"role\": null,\n    \"_id\": \"66c9953d1a174a0b958c656c\"\n}"
+								},
+								{
+									"name": "Register a beneficiary",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"email\":\"Beneficiary@iwanttoeat.com\",\n    \"password\": \"Beneficiary1243!\",\n    \"company_name\": \"I want to eat\",\n    \"name\": \"Employee 1\",\n    \"phone_number\": \"+6565656565\",\n    \"role\": \"Beneficiary\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8000/api/users/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"users",
+												""
+											]
+										}
+									},
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "date",
+											"value": "Sat, 24 Aug 2024 08:09:32 GMT"
+										},
+										{
+											"key": "server",
+											"value": "uvicorn"
+										},
+										{
+											"key": "content-length",
+											"value": "202"
+										},
+										{
+											"key": "content-type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"email\": \"admin@foodbank.com\",\n    \"is_verified\": false,\n    \"is_superuser\": false,\n    \"company_name\": \"Foodbank Singapore\",\n    \"name\": \"Admin\",\n    \"phone_number\": \"tel:+65-9876-5432\",\n    \"role\": null,\n    \"_id\": \"66c9953d1a174a0b958c656c\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Login",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"Beneficiary@iwanttoeat.com\",\n    \"password\": \"Beneficiary1243!\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/users/login",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"users",
+										"login"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Admin",
+					"item": [
+						{
+							"name": "Promote user to super",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTAwMTlkZS1jZGMyLTRkNGYtYWVkNy1lM2U5NjBiMTU0ZDUiLCJlbWFpbCI6ImFkbWluQGZvb2RiYW5rLmNvbSIsInJvbGUiOm51bGwsImlzX3ZlcmlmaWVkIjp0cnVlLCJpc19zdXBlcnVzZXIiOmZhbHNlLCJleHAiOjE3MjQ0OTYzNTF9.R5rkEkaWjrPm1AT8AmFENrTfdoj9oPCQLpH9RVbYRk8",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/admin/promote/:user_id",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"promote",
+										":user_id"
+									],
+									"variable": [
+										{
+											"key": "user_id",
+											"value": "66c960584d946fc096c2b940"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Verify a donor",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NmM5OTUzZDFhMTc0YTBiOTU4YzY1NmIiLCJlbWFpbCI6ImFkbWluQGZvb2RiYW5rLmNvbSIsInBhc3N3b3JkIjoiJDJiJDEyJFUwM3JkQ04zcFUyZWNWMFVUdGFicmVOdXo3RmVFejhZU1lWOHJBaXZCTU1wQXVBa2NkVFo2IiwiY29tcGFueV9uYW1lIjoiRm9vZGJhbmsgU2luZ2Fwb3JlIiwibmFtZSI6IkFkbWluIiwicGhvbmVfbnVtYmVyIjoidGVsOis2NS05ODc2LTU0MzIiLCJyb2xlIjpudWxsLCJpc192ZXJpZmllZCI6ZmFsc2UsImlzX3N1cGVydXNlciI6dHJ1ZSwiZXhwIjoxNzI0NDg4ODMzfQ.a2-iKZrb0B2mdSOcVrVIKOWfcJEuxM9nOFfY4qtJOew",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/admin/verify-donor/:user_id",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"verify-donor",
+										":user_id"
+									],
+									"variable": [
+										{
+											"key": "user_id",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/health",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
