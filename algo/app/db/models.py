@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum as SqlEnum, JSON, ForeignKey, Boolean, Float, DateTime
+from sqlalchemy import Column, Integer, String, Enum as SqlEnum, JSON, ForeignKey, Boolean, Float, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
@@ -25,7 +25,6 @@ class AgencyModel(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, index=True)
     name = Column(String, nullable=False)
-    requirements = Column(JSON, nullable=False)
     priority_flag = Column(Boolean, default=False)
     location = Column(JSON, nullable=False, default=lambda: [0.0, 0.0])
  
@@ -43,6 +42,7 @@ class DonationModel(Base):
     status = Column(SqlEnum(DonationStatus), default=DonationStatus.READY)
     agency_id = Column(UUID(as_uuid=True), ForeignKey("agencies.id"), nullable=True)
     expiry_time = Column(DateTime(timezone=True), server_default=func.now())
+    
     def __repr__(self):
         return f"<Donation(id={self.id}, donor_id={self.donor_id}, status={self.status})>"
 
@@ -56,3 +56,15 @@ class DonorModel(Base):
 
     def __repr__(self):
         return f"<Donor(id={self.id}, name={self.name})>"
+
+class RequirementModel(Base):
+    __tablename__ = "requirements"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True)
+    agency_id = Column(UUID(as_uuid=True), ForeignKey('agencies.id'), nullable=False)
+    food_type = Column(SqlEnum(FoodType), nullable=False)
+    quantity = Column(Integer, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('agency_id', 'food_type', name='uq_agency_food_type'),
+    )
