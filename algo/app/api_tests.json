@@ -21,7 +21,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"id\": \"agency-001\",\n  \"name\": \"Food from the Heart\",\n  \"requirements\": {\"Halal\": 200, \"Non-Halal\": 100, \"Vegetarian\": 150},\n  \"priority_flag\": false,\n  \"location\": [1.3521, 103.8198]\n}"
+							"raw": "{\n  \"id\": \"f40b78cc-294b-4f42-a094-f87e8e84b3f1\",\n \"name\": \"Food from the Heart\",\n  \"requirements\": {\"halal\": 200, \"none\": 100, \"vegetarian\": 150, \"no-beef\": 50},\n  \"priority_flag\": false,\n  \"location\": [1.3521, 103.8198]\n}"
 						},
 						"url": {
 							"raw": "http://localhost:8000/api/agencies",
@@ -64,7 +64,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8000/api/agencies/agency-001",
+							"raw": "http://localhost:8000/api/agencies/f40b78cc-294b-4f42-a094-f87e8e84b3f1",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -73,7 +73,7 @@
 							"path": [
 								"api",
 								"agencies",
-								"agency-001"
+								"f40b78cc-294b-4f42-a094-f87e8e84b3f1"
 							]
 						}
 					},
@@ -96,7 +96,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"id\": \"donor-001\",\n  \"name\": \"NTUC FairPrice\",\n  \"location\": [1.3521, 103.8198],\n  \"donations\": 0.0\n}"
+							"raw": "{\n  \"id\": \"a1f2e1c8-2a80-48fb-b2d3-141f702e86bf\",\n  \"name\": \"NTUC FairPrice\",\n  \"location\": [1.3521, 103.8198],\n  \"donations\": 0.0\n}"
 						},
 						"url": {
 							"raw": "http://localhost:8000/api/donors",
@@ -150,7 +150,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"id\": \"donation-001\",\n  \"donor_id\": \"donor-001\",\n  \"items\": {\"Halal\": 100, \"Non-Halal\": 50, \"Vegetarian\": 75},\n  \"location\": [1.3521, 103.8198],\n  \"status\": \"Ready\",\n  \"agency_id\": null\n}"
+							"raw": "{\n \"id\": \"859e8643-dfe2-4dc9-ae59-33ffbcd87177\", \n \"donor_id\": \"a1f2e1c8-2a80-48fb-b2d3-141f702e86bf\",\n  \"food_type\": \"halal\",\n  \"quantity\": 100,\n  \"location\": [1.3521, 103.8198],\n  \"status\": \"READY\"\n}"
 						},
 						"url": {
 							"raw": "http://localhost:8000/api/donations",
@@ -182,6 +182,37 @@
 							"path": [
 								"api",
 								"donations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Donation Agency",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"agency_id\": \"f40b78cc-294b-4f42-a094-f87e8e84b3f1\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/donations/859e8643-dfe2-4dc9-ae59-33ffbcd87177/agency",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"donations",
+								"859e8643-dfe2-4dc9-ae59-33ffbcd87177",
+								"agency"
 							]
 						}
 					},

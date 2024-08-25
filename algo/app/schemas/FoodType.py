@@ -1,8 +1,7 @@
 from enum import Enum
 
 class FoodType(str, Enum):
-    HALAL = 'Halal'
-    NON_HALAL = 'Non-Halal'
-    VEGETARIAN = 'Vegetarian'
-    VEGAN = 'Vegan'
-    NON_BEEF = 'Non-Beef'
+    HALAL = 'halal'
+    NONE = 'none'
+    VEGETARIAN = 'vegetarian'
+    NON_BEEF = 'no-beef'
