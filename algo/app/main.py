@@ -1,4 +1,7 @@
+import os
+
 from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from db.database import get_db
@@ -14,12 +17,21 @@ from AllocationSystem import get_allocation_system
 app = FastAPI()
 
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Include routers
 app.include_router(agency_router, prefix="/api", tags=["agencies"])
 app.include_router(donation_router, prefix="/api", tags=["donations"])
 app.include_router(donor_router, prefix="/api", tags=["donors"])
-app.include_router(requirement_router,prefix="/api", tags=["requirements"])
+app.include_router(requirement_router, prefix="/api", tags=["requirements"])
 allocation_system = get_allocation_system()
+
 
 @app.websocket("/ws/{agency_id}")
 async def websocket_endpoint(websocket: WebSocket, agency_id: str):
@@ -32,10 +44,13 @@ async def websocket_endpoint(websocket: WebSocket, agency_id: str):
         allocation_system.disconnect(agency_id)
         print(f"Agency {agency_id} disconnected.")
 
+
 @app.get("/health")
 async def health():
     return {"message": "Algorithm service is up and running!"}
 
 # Function to get the AllocationSystem instance
+
+
 def get_allocation_system():
     return allocation_system
