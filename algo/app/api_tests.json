@@ -1,27 +1,26 @@
 {
 	"info": {
-		"_postman_id": "0595732f-2a20-4ed0-a87b-5858fafe19d1",
-		"name": "Food Donation API Tests",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "37890078"
+		"_postman_id": "b5b6b7b8-c9c9-4d4d-8e8e-f1f1f2f2f3f3",
+		"name": "Food Donation API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
 			"name": "Agencies",
 			"item": [
 				{
-					"name": "Create Agency 1",
+					"name": "Create Agency",
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"id\": \"agency-001\",\n  \"name\": \"Food from the Heart\",\n  \"requirements\": {\"Halal\": 200, \"Non-Halal\": 100, \"Vegetarian\": 150},\n  \"priority_flag\": false,\n  \"location\": [1.3521, 103.8198]\n}"
+							"raw": "{\n    \"id\": \"a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f\",\n    \"name\": \"Food Bank A\",\n    \"priority_flag\": false,\n    \"location\": [40.7128, -74.0060]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
 							"raw": "http://localhost:8000/api/agencies",
@@ -64,7 +63,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8000/api/agencies/agency-001",
+							"raw": "http://localhost:8000/api/agencies/a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -73,7 +72,130 @@
 							"path": [
 								"api",
 								"agencies",
-								"agency-001"
+								"a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Agency",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Food Bank A\",\n    \"priority_flag\": true,\n    \"location\": [40.7129, -74.0061]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/agencies/a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"agencies",
+								"a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Agency Requirements",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requirements\": {\n        \"halal\": 100,\n        \"vegetarian\": 50\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/agencies/a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f/requirements",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"agencies",
+								"a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f",
+								"requirements"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Agency Priority Flag",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"priority_flag\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/agencies/a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f/priority-flag",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"agencies",
+								"a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f",
+								"priority-flag"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Agency Location",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"location\": [40.7130, -74.0062]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/agencies/a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f/location",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"agencies",
+								"a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f",
+								"location"
 							]
 						}
 					},
@@ -85,18 +207,18 @@
 			"name": "Donors",
 			"item": [
 				{
-					"name": "Create Donor 1",
+					"name": "Create Donor",
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"id\": \"donor-001\",\n  \"name\": \"NTUC FairPrice\",\n  \"location\": [1.3521, 103.8198],\n  \"donations\": 0.0\n}"
+							"raw": "{\n    \"id\": \"b2c3d4e5-f6a7-5b6c-0d1e-2f3a4b5c6d7e\",\n    \"name\": \"Generous Donor\",\n    \"location\": [40.7135, -74.0065],\n    \"donations\": 0\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
 							"raw": "http://localhost:8000/api/donors",
@@ -132,6 +254,119 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Get Donor by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/donors/b2c3d4e5-f6a7-5b6c-0d1e-2f3a4b5c6d7e",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"donors",
+								"b2c3d4e5-f6a7-5b6c-0d1e-2f3a4b5c6d7e"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Donor",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Generous Donor\",\n    \"location\": [40.7136, -74.0066],\n    \"donations\": 100\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/donors/b2c3d4e5-f6a7-5b6c-0d1e-2f3a4b5c6d7e",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"donors",
+								"b2c3d4e5-f6a7-5b6c-0d1e-2f3a4b5c6d7e"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Donor Location",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"location\": [40.7137, -74.0067]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/donors/b2c3d4e5-f6a7-5b6c-0d1e-2f3a4b5c6d7e/location",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"donors",
+								"b2c3d4e5-f6a7-5b6c-0d1e-2f3a4b5c6d7e",
+								"location"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Donor Donations",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"donations\": 150\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/donors/b2c3d4e5-f6a7-5b6c-0d1e-2f3a4b5c6d7e/donations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"donors",
+								"b2c3d4e5-f6a7-5b6c-0d1e-2f3a4b5c6d7e",
+								"donations"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -139,18 +374,18 @@
 			"name": "Donations",
 			"item": [
 				{
-					"name": "Create Donation 1",
+					"name": "Create Donation",
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"id\": \"donation-001\",\n  \"donor_id\": \"donor-001\",\n  \"items\": {\"Halal\": 100, \"Non-Halal\": 50, \"Vegetarian\": 75},\n  \"location\": [1.3521, 103.8198],\n  \"status\": \"Ready\",\n  \"agency_id\": null\n}"
+							"raw": "{\n    \"id\": \"c3d4e5f6-a7b8-6c7d-1e2f-3a4b5c6d7e8f\",\n    \"donor_id\": \"b2c3d4e5-f6a7-5b6c-0d1e-2f3a4b5c6d7e\",\n    \"food_type\": \"halal\",\n    \"quantity\": 50,\n    \"location\": [40.7140, -74.0070],\n    \"status\": \"Ready\",\n    \"agency_id\": null,\n    \"expiry_time\": \"2023-08-30T12:00:00Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
 							"raw": "http://localhost:8000/api/donations",
@@ -186,27 +421,277 @@
 						}
 					},
 					"response": []
+				},{
+					"name": "Get Donation by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/donations/c3d4e5f6-a7b8-6c7d-1e2f-3a4b5c6d7e8f",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"donations",
+								"c3d4e5f6-a7b8-6c7d-1e2f-3a4b5c6d7e8f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Donation",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"donor_id\": \"b2c3d4e5-f6a7-5b6c-0d1e-2f3a4b5c6d7e\",\n    \"food_type\": \"halal\",\n    \"quantity\": 75,\n    \"location\": [40.7141, -74.0071],\n    \"status\": \"Allocated\",\n    \"agency_id\": \"a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f\",\n    \"expiry_time\": \"2023-08-31T12:00:00Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/donations/c3d4e5f6-a7b8-6c7d-1e2f-3a4b5c6d7e8f",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"donations",
+								"c3d4e5f6-a7b8-6c7d-1e2f-3a4b5c6d7e8f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Donation Status",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"Accepted\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/donations/c3d4e5f6-a7b8-6c7d-1e2f-3a4b5c6d7e8f/status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"donations",
+								"c3d4e5f6-a7b8-6c7d-1e2f-3a4b5c6d7e8f",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Donation Agency",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"agency_id\": \"a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/donations/c3d4e5f6-a7b8-6c7d-1e2f-3a4b5c6d7e8f/agency",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"donations",
+								"c3d4e5f6-a7b8-6c7d-1e2f-3a4b5c6d7e8f",
+								"agency"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Donation Location",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"location\": [40.7142, -74.0072]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/donations/c3d4e5f6-a7b8-6c7d-1e2f-3a4b5c6d7e8f/location",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"donations",
+								"c3d4e5f6-a7b8-6c7d-1e2f-3a4b5c6d7e8f",
+								"location"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
 		{
-			"name": "Health Check",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8000/health",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8000",
-					"path": [
-						"health"
-					]
+			"name": "Requirements",
+			"item": [
+				{
+					"name": "Create Requirement",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"quantity\": 100,\n    \"food_type\": \"halal\",\n    \"agency_id\": \"a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/requirements",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"requirements"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Requirements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/requirements",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"requirements"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Requirement by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/requirements/d4e5f6a7-b8c9-7d8e-2f3a-4b5c6d7e8f9a",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"requirements",
+								"d4e5f6a7-b8c9-7d8e-2f3a-4b5c6d7e8f9a"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Requirement (Upsert Test)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"quantity\": 150,\n    \"food_type\": \"halal\",\n    \"agency_id\": \"a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/requirements",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"requirements"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Agency Requirements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/agencies/a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f/requirements",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"agencies",
+								"a1b2c3d4-e5f6-4a5b-9c9d-1a2b3c4d5e6f",
+								"requirements"
+							]
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
 		}
 	]
 }

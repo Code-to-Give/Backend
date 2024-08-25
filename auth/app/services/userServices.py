@@ -105,6 +105,8 @@ def create_access_token(user: User):
     token_data = TokenData(
         sub=user.id,
         email=user.email,
+        company_name=user.company_name,
+        name=user.name,
         role=user.role,
         is_verified=user.is_verified,
         is_superuser=user.is_superuser,
@@ -128,6 +130,8 @@ def create_refresh_token(user: User) -> str:
     token_data = TokenData(
         sub=user.id,
         email=user.email,
+        company_name=user.company_name,
+        name=user.name,
         role=user.role,
         is_verified=user.is_verified,
         is_superuser=user.is_superuser,
