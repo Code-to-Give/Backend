@@ -64,7 +64,7 @@ async def handle_donation_response(
                 AgencyModel.name == current_user["company_name"]
             )
         )
-        agency: AgencyModel = result.scalar_one_or_none()
+        agency: AgencyModel = result.scalars().first()
 
         if agency is None:
             raise HTTPException(
@@ -129,26 +129,27 @@ async def fetch_requirements(db: AsyncSession, skip: int = 0, limit: int = 100):
     return [Requirement.model_validate(agency) for agency in requirements]
 
 
-@ router.post("/donations/me", response_model=Donation)
+@router.post("/donations/me", response_model=Donation)
 async def create_donation_as_me(
     donation_created: DonationCreated,
     db: AsyncSession = Depends(get_db),
     allocation_system: AsyncSession = Depends(get_allocation_system),
     current_user=Depends(get_current_user)
 ):
-
     result = await db.execute(
         select(DonorModel).filter(
             DonorModel.name == current_user["company_name"]
         )
     )
-    donor: DonorModel = result.scalar_one_or_none()
+    donors = result.scalars().all()
 
-    if donor is None:
+    if not donors:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Donor not found"
         )
+
+    donor = donors[0]
 
     donation = Donation(
         donor_id=donor.id,
@@ -164,11 +165,10 @@ async def create_donation_as_me(
     await db.commit()
     await db.refresh(db_donation)
 
-    # # Trigger the allocation process for the new donation
     agencies = await fetch_agencies(db)
     await allocation_system.allocate_donation(donation, agencies)
 
-    return Donation.model_validate(donation)
+    return Donation.model_validate(db_donation)
 
 
 @ router.post("/donations", response_model=Donation)
@@ -208,13 +208,15 @@ async def read_donations_as_me(
                     AgencyModel.name == current_user["company_name"]
                 )
             )
-            agency: AgencyModel = result.scalar_one_or_none()
+            agencies: List[AgencyModel] = result.scalars().all()
 
-            if agency is None:
+            if not agencies:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Agency not found"
                 )
+
+            agency = agencies[0]
 
             # retrieve all donations for the agency
             result = await db.execute(
@@ -233,13 +235,15 @@ async def read_donations_as_me(
                     DonorModel.name == current_user["company_name"]
                 )
             )
-            donor: DonorModel = result.scalar_one_or_none()
+            donors: List[DonorModel] = result.scalars().all()
 
-            if donor is None:
+            if not donors:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Donor not found"
                 )
+
+            donor = donors[0]
 
             # retrieve all donations for the donor
             result = await db.execute(

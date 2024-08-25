@@ -43,16 +43,14 @@ async def create_agency(
 
         # Check if a company_name matches name
         result = await db.execute(select(AgencyModel).filter_by(name=current_user["company_name"]))
-        existing_agency = result.scalars().first()
+        agencies = result.scalars().all()
 
-        # If a match is found, return the existing agency
-        if existing_agency:
-            return existing_agency
-
-        # Create a new agency
-        agency = AgencyModel(
-            name=current_user["company_name"]
-        )
+        if not agencies:
+            agency = AgencyModel(
+                name=current_user["company_name"]
+            )
+        else:
+            agency = agencies[0]
 
         # db_agency = AgencyModel(**agency.model_dump())
         db.add(agency)
@@ -92,9 +90,12 @@ async def read_agency_as_me(
         )
 
     result = await db.execute(select(AgencyModel).filter(AgencyModel.name == current_user["company_name"]))
-    agency = result.scalar_one_or_none()
-    if agency is None:
+    agencies = result.scalars().all()
+
+    if not agencies:
         raise HTTPException(status_code=404, detail="Agency not found")
+
+    agency = agencies[0]
     return Agency.model_validate(agency)
 
 
