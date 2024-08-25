@@ -15,3 +15,7 @@ class Donor(BaseModel):
 
 class DonorCreated(BaseModel):
     location: Tuple[float, float] = (0.0, 0.0)
+
+
+class DonorUpdate(BaseModel):
+    location: Tuple[float, float]

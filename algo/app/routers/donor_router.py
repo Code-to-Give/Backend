@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from db.database import get_db
 from db.models import DonorModel
-from schemas.Donor import Donor, DonorCreated
+from schemas.Donor import Donor, DonorCreated, DonorUpdate
 from typing import List, Tuple
 
 from utils.jwt_auth import get_current_user
@@ -49,6 +49,18 @@ async def read_donors(skip: int = 0, limit: int = 100, db: AsyncSession = Depend
     return [Donor.from_orm(donor) for donor in donors]
 
 
+@router.get("/donors/me", response_model=Donor)
+async def read_donor_as_me(
+        db: AsyncSession = Depends(get_db),
+        current_user=Depends(get_current_user)):
+
+    result = await db.execute(select(DonorModel).filter(DonorModel.name == current_user["company_name"]))
+    donor = result.scalar_one_or_none()
+    if donor is None:
+        raise HTTPException(status_code=404, detail="Donor not found")
+    return Donor.from_orm(donor)
+
+
 @router.get("/donors/{donor_id}", response_model=Donor)
 async def read_donor(donor_id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonorModel).filter(DonorModel.id == donor_id))
@@ -57,20 +69,19 @@ async def read_donor(donor_id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Donor not found")
     return Donor.from_orm(donor)
 
+# @router.put("/donors/{donor_id}", response_model=Donor)
+# async def update_donor(donor_id: str, donor: Donor, db: AsyncSession = Depends(get_db)):
+#     result = await db.execute(select(DonorModel).filter(DonorModel.id == donor_id))
+#     db_donor = result.scalar_one_or_none()
+#     if db_donor is None:
+#         raise HTTPException(status_code=404, detail="Donor not found")
 
-@router.put("/donors/{donor_id}", response_model=Donor)
-async def update_donor(donor_id: str, donor: Donor, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(DonorModel).filter(DonorModel.id == donor_id))
-    db_donor = result.scalar_one_or_none()
-    if db_donor is None:
-        raise HTTPException(status_code=404, detail="Donor not found")
+#     for key, value in donor.dict(exclude_unset=True).items():
+#         setattr(db_donor, key, value)
 
-    for key, value in donor.dict(exclude_unset=True).items():
-        setattr(db_donor, key, value)
-
-    await db.commit()
-    await db.refresh(db_donor)
-    return Donor.from_orm(db_donor)
+#     await db.commit()
+#     await db.refresh(db_donor)
+#     return Donor.from_orm(db_donor)
 
 
 @router.delete("/donors/{donor_id}", response_model=Donor)
@@ -81,6 +92,24 @@ async def delete_donor(donor_id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Donor not found")
     await db.delete(donor)
     await db.commit()
+    return Donor.from_orm(donor)
+
+
+@router.patch("/donors/me/location", response_model=Donor)
+async def update_donor_location(
+        req: DonorUpdate,
+        db: AsyncSession = Depends(get_db),
+        current_user=Depends(get_current_user)):
+
+    location: Tuple[float, float] = tuple(req.location)
+
+    result = await db.execute(select(DonorModel).filter(DonorModel.name == current_user["company_name"]))
+    donor = result.scalar_one_or_none()
+    if donor is None:
+        raise HTTPException(status_code=404, detail="Donor not found")
+    donor.location = location
+    await db.commit()
+    await db.refresh(donor)
     return Donor.from_orm(donor)
 
 
