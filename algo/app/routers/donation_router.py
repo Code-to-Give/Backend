@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, Body, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from db.database import get_db
-from db.models import DonationModel, AgencyModel, RequirementModel
+from db.models import DonationModel, AgencyModel, RequirementModel, DonorModel
 from schemas.Donation import Donation, DonationCreated
 from schemas.Agency import Agency
 from schemas.Requirement import Requirement
@@ -57,6 +57,20 @@ async def create_donation_me(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
+
+    result = await db.execute(
+        select(DonorModel).filter(
+            DonorModel.name == current_user["company_name"]
+        )
+    )
+    donor: DonorModel = result.scalar_one_or_none()
+
+    if donor is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Donor not found"
+        )
+
     donation = Donation(
         donor_id=current_user["sub"],
         food_type=donation_created.food_type,
@@ -94,6 +108,51 @@ async def read_donations(skip: int = 0, limit: int = 100, db: AsyncSession = Dep
     result = await db.execute(select(DonationModel).offset(skip).limit(limit))
     donations = result.scalars().all()
     return [Donation.model_validate(donation) for donation in donations]
+
+
+@router.get("/donations/me", response_model=Donation)
+async def read_donation_as_me(
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    try:
+        # check if the donor exists
+        result = await db.execute(
+            select(DonorModel).filter(
+                DonorModel.name == current_user["company_name"]
+            )
+        )
+        donor: DonorModel = result.scalar_one_or_none()
+
+        if donor is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Donor not found"
+            )
+
+        # retrieve the donation for the donor
+        result = await db.execute(
+            select(DonationModel).filter(DonationModel.donor_id == donor.id)
+        )
+        donation = result.scalar_one_or_none()
+
+        if donation is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Donation not found"
+            )
+
+        return Donation.model_validate(donation)
+
+    except HTTPException as e:
+        raise e
+
+    except Exception as e:
+        print(f"Unexpected error in read_donation_as_me: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while retrieving the donation"
+        )
 
 
 @router.get("/donations/{donation_id}", response_model=Donation)
