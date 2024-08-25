@@ -14,11 +14,6 @@ load_dotenv()
 
 app = FastAPI()
 
-@app.post("/api/users/login")
-async def login():
-    # Your login logic here
-    return {"message": "Login successful"}
-
 
 app.add_middleware(
     CORSMiddleware,
