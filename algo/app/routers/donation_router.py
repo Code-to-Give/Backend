@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from db.database import get_db
@@ -10,7 +10,6 @@ from schemas.DonationStatus import DonationStatus
 from AllocationSystem import AllocationSystem
 from routers.agency_router import read_agencies
 from typing import List, Tuple
-from AllocationSystem import get_allocation_system
 from pydantic import BaseModel
 from uuid import UUID
 
@@ -25,6 +24,10 @@ class DonationStatusUpdate(BaseModel):
 class DonationLocationUpdate(BaseModel):
     location: Tuple[float, float]
 
+
+async def get_allocation_system(request):
+    return request.app.state.allocation_system
+
 # Temporary function for non-routed reads
 async def fetch_agencies(db: AsyncSession, skip: int = 0, limit: int = 100):
     result = await db.execute(select(AgencyModel).offset(skip).limit(limit))
@@ -38,8 +41,9 @@ async def fetch_requirements(db: AsyncSession, skip: int = 0, limit: int = 100):
     return [Requirement.model_validate(agency) for agency in requirements]
 
 @router.post("/donations", response_model=Donation)
-async def create_donation(donation: Donation, db: AsyncSession = Depends(get_db), allocation_system: AllocationSystem = Depends(get_allocation_system)
+async def create_donation(donation: Donation, request: Request, db: AsyncSession = Depends(get_db)
 ):
+    allocation_system = await get_allocation_system(request)
     db_donation = DonationModel(**donation.model_dump())
     db.add(db_donation)
     await db.commit()
@@ -48,7 +52,7 @@ async def create_donation(donation: Donation, db: AsyncSession = Depends(get_db)
     # Trigger the allocation process for the new donation
     agencies = await fetch_agencies(db)  
     requirements = await fetch_requirements(db)
-    await allocation_system.allocate_donation(donation, agencies, requirements)
+    await allocation_system.allocate_donation(donation, agencies)
     
     return Donation.model_validate(db_donation)
 
