@@ -4,10 +4,27 @@ from schemas.FoodType import FoodType
 from uuid import UUID, uuid4
 from typing import Dict, Tuple
 
+
 class Agency(BaseModel):
     name: str
     id: UUID = Field(default_factory=uuid4)
     priority_flag: bool = False
     location: Tuple[float, float] = (0.0, 0.0)
-    
+
     model_config = ConfigDict(from_attributes=True)
+
+
+class AgencyUpdate(BaseModel):
+    agency_id: UUID
+
+
+class AgencyRequirementsUpdate(BaseModel):
+    requirements: Dict[str, int]
+
+
+class AgencyPriorityFlagUpdate(BaseModel):
+    priority_flag: bool
+
+
+class AgencyLocationUpdate(BaseModel):
+    location: Tuple[float, float]

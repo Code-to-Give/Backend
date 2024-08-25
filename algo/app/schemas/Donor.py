@@ -13,9 +13,9 @@ class Donor(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class DonorCreated(BaseModel):
-    location: Tuple[float, float] = (0.0, 0.0)
-
-
-class DonorUpdate(BaseModel):
+class DonorLocationUpdate(BaseModel):
     location: Tuple[float, float]
+
+
+class DonorDonationsUpdate(BaseModel):
+    donations: float
