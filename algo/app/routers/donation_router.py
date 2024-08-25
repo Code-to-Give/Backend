@@ -29,11 +29,13 @@ class DonationStatusUpdate(BaseModel):
 class DonationLocationUpdate(BaseModel):
     location: Tuple[float, float]
 
+
 class DonationResponse(BaseModel):
     donation_id: UUID
     agency_id: UUID
     action: str
     success: bool
+
 
 @router.post("/donations/{donation_id}/{action}", response_model=DonationResponse)
 async def handle_donation_response(
@@ -44,27 +46,30 @@ async def handle_donation_response(
     db: AsyncSession = Depends(get_db)
 ):
     if action not in ['accept', 'reject']:
-        raise HTTPException(status_code=400, detail="Invalid action. Must be 'accept' or 'reject'.")
+        raise HTTPException(
+            status_code=400, detail="Invalid action. Must be 'accept' or 'reject'.")
 
     allocation_system = await get_allocation_system(request)
-    
+
     if action == 'accept':
         success = await allocation_system.accept_donation(donation_id, agency_id)
     else:  # action == 'reject'
         success = await allocation_system.reject_donation(donation_id, agency_id)
-    
+
     if not success:
-        raise HTTPException(status_code=400, detail=f"Unable to {action} donation. It may have already been processed or the agency is not first in queue.")
-    
+        raise HTTPException(status_code=400,
+                            detail=f"Unable to {action} donation. It may have already been processed or the agency is not first in queue.")
+
     return DonationResponse(
         donation_id=donation_id,
         agency_id=agency_id,
         action=action,
         success=success
     )
-    
-async def get_allocation_system(request):
-    return request.app.state.allocation_system
+
+
+# async def get_allocation_system(request):
+#     return request.app.state.allocation_system
 
 # Temporary function for non-routed reads
 
@@ -86,8 +91,8 @@ async def fetch_requirements(db: AsyncSession, skip: int = 0, limit: int = 100):
 @router.post("/donations/me", response_model=Donation)
 async def create_donation_as_me(
     donation_created: DonationCreated,
-    request: Request,
     db: AsyncSession = Depends(get_db),
+    allocation_system: AsyncSession = Depends(get_allocation_system),
     current_user=Depends(get_current_user)
 ):
 
@@ -113,11 +118,18 @@ async def create_donation_as_me(
         expiry_time=donation_created.expiry_time
     )
 
-    allocation_system = await get_allocation_system(request)
+    allocation_system = await get_allocation_system()
+
+    db_donation = DonationModel(**donation.model_dump())
+    db.add(db_donation)
+    await db.commit()
+    await db.refresh(db_donation)
+
     # # Trigger the allocation process for the new donation
     agencies = await fetch_agencies(db)
-    requirements = await fetch_requirements(db)
     await allocation_system.allocate_donation(donation, agencies)
+
+    return Donation.model_validate(donation)
 
 
 @router.post("/donations", response_model=Donation)
@@ -130,7 +142,7 @@ async def create_donation(donation: Donation, request: Request, db: AsyncSession
     await db.refresh(db_donation)
 
     agencies = await fetch_agencies(db)
-    requirements = await fetch_requirements(db)
+    # requirements = await fetch_requirements(db)
     await allocation_system.allocate_donation(donation, agencies)
 
     return Donation.model_validate(db_donation)
