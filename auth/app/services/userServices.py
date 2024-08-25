@@ -44,6 +44,9 @@ def create_user(db: Database, user: UserRegister) -> Dict[str, Any]:
     else:
         is_verified = False
 
+    if user.role == Role.volunteer:
+        user.company_name = None
+
     user = {
         "_id": str(uuid4()),
         "email": user.email,
