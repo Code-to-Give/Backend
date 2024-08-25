@@ -24,7 +24,40 @@ class DonationStatusUpdate(BaseModel):
 class DonationLocationUpdate(BaseModel):
     location: Tuple[float, float]
 
+class DonationResponse(BaseModel):
+    donation_id: UUID
+    agency_id: UUID
+    action: str
+    success: bool
 
+@router.post("/donations/{donation_id}/{action}", response_model=DonationResponse)
+async def handle_donation_response(
+    donation_id: UUID,
+    action: str,
+    agency_id: UUID,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    if action not in ['accept', 'reject']:
+        raise HTTPException(status_code=400, detail="Invalid action. Must be 'accept' or 'reject'.")
+
+    allocation_system = await get_allocation_system(request)
+    
+    if action == 'accept':
+        success = await allocation_system.accept_donation(donation_id, agency_id)
+    else:  # action == 'reject'
+        success = await allocation_system.reject_donation(donation_id, agency_id)
+    
+    if not success:
+        raise HTTPException(status_code=400, detail=f"Unable to {action} donation. It may have already been processed or the agency is not first in queue.")
+    
+    return DonationResponse(
+        donation_id=donation_id,
+        agency_id=agency_id,
+        action=action,
+        success=success
+    )
+    
 async def get_allocation_system(request):
     return request.app.state.allocation_system
 
