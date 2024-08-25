@@ -10,8 +10,10 @@ from schemas.DonationStatus import DonationStatus
 from AllocationSystem import AllocationSystem
 from routers.agency_router import read_agencies
 from typing import List, Tuple
+from AllocationSystem import get_allocation_system
 from pydantic import BaseModel
 from uuid import UUID
+from utils.jwt_auth import get_current_user
 
 router = APIRouter()
 
@@ -20,7 +22,7 @@ class AgencyUpdate(BaseModel):
     
 class DonationStatusUpdate(BaseModel):
     status: DonationStatus
-    
+
 class DonationLocationUpdate(BaseModel):
     location: Tuple[float, float]
 
@@ -73,6 +75,29 @@ async def fetch_requirements(db: AsyncSession, skip: int = 0, limit: int = 100):
     requirements = result.scalars().all()
     return [Requirement.model_validate(agency) for agency in requirements]
 
+
+@router.post("/donations_me", response_model=Donation)
+async def create_donation_me(
+    donation_created: DonationCreated,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    donation = Donation(
+        donor_id=current_user["sub"],
+        food_type=donation_created.food_type,
+        quantity=donation_created.quantity,
+        location=donation_created.location,
+        status=donation_created.status,
+        expiry_time=donation_created.expiry_time
+    )
+  
+    allocation_system = await get_allocation_system(request)
+    # # Trigger the allocation process for the new donation
+    agencies = await fetch_agencies(db)
+    requirements = await fetch_requirements(db)
+    await allocation_system.allocate_donation(donation, agencies, requirements)
+
 @router.post("/donations", response_model=Donation)
 async def create_donation(donation: Donation, request: Request, db: AsyncSession = Depends(get_db)
 ):
@@ -81,19 +106,20 @@ async def create_donation(donation: Donation, request: Request, db: AsyncSession
     db.add(db_donation)
     await db.commit()
     await db.refresh(db_donation)
-    
-    # Trigger the allocation process for the new donation
+
     agencies = await fetch_agencies(db)  
     requirements = await fetch_requirements(db)
     await allocation_system.allocate_donation(donation, agencies)
-    
+
     return Donation.model_validate(db_donation)
+
 
 @router.get("/donations", response_model=List[Donation])
 async def read_donations(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonationModel).offset(skip).limit(limit))
     donations = result.scalars().all()
     return [Donation.model_validate(donation) for donation in donations]
+
 
 @router.get("/donations/{donation_id}", response_model=Donation)
 async def read_donation(donation_id: UUID, db: AsyncSession = Depends(get_db)):
@@ -109,10 +135,10 @@ async def update_donation(donation_id: UUID, donation: Donation, db: AsyncSessio
     db_donation = result.scalar_one_or_none()
     if db_donation is None:
         raise HTTPException(status_code=404, detail="Donation not found")
-    
+
     for key, value in donation.dict(exclude_unset=True).items():
         setattr(db_donation, key, value)
-    
+
     await db.commit()
     await db.refresh(db_donation)
     return Donation.model_validate(db_donation)
@@ -138,6 +164,7 @@ async def update_donation_status(donation_id: UUID, update_data: DonationStatusU
     await db.refresh(donation)
     return Donation.model_validate(donation)
 
+
 @router.patch("/donations/{donation_id}/agency", response_model=Donation)
 async def update_donation_agency(donation_id: UUID, update_data: AgencyUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonationModel).filter(DonationModel.id == donation_id))
@@ -149,6 +176,7 @@ async def update_donation_agency(donation_id: UUID, update_data: AgencyUpdate, d
     await db.refresh(donation)
     return Donation.model_validate(donation)
 
+
 @router.patch("/donations/{donation_id}/location", response_model=Donation)
 async def update_donation_location(donation_id: UUID, update_data: DonationLocationUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonationModel).filter(DonationModel.id == donation_id))
@@ -158,4 +186,6 @@ async def update_donation_location(donation_id: UUID, update_data: DonationLocat
     donation.location = update_data.location
     await db.commit()
     await db.refresh(donation)
+
     return Donation.model_validate(donation)
+

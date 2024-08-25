@@ -175,6 +175,7 @@ class AllocationSystem():
 async def get_allocation_system(db: AsyncSession = Depends(get_db))->AllocationSystem:
     return await AllocationSystem.get_instance(db)
 
+
 # This function should be called when a new requirement is added or updated
 def update_requirement(requirement: Requirement):
     allocation_system = get_allocation_system()
