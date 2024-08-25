@@ -68,8 +68,8 @@ async def handle_donation_response(
     )
 
 
-# async def get_allocation_system(request):
-#     return request.app.state.allocation_system
+async def get_allocation_system(request):
+    return request.app.state.allocation_system
 
 # Temporary function for non-routed reads
 

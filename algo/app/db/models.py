@@ -68,3 +68,15 @@ class RequirementModel(Base):
     __table_args__ = (
         UniqueConstraint('agency_id', 'food_type', name='uq_agency_food_type'),
     )
+    
+class VolunteerModel(Base):
+    __tablename__ = "volunteers"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    location = Column(JSON, nullable=False, default=lambda: [0.0, 0.0])
+    capacity = Column(Integer, default=0)
+    delivery = Column(Integer, default=0)
+
+    def __repr__(self):
+        return f"<Volunteer(id={self.id}, name={self.name}, delivery={self.delivery})>"
