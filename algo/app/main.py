@@ -1,4 +1,8 @@
+import os
+from dotenv import load_dotenv
+
 from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -11,6 +15,9 @@ from routers.donor_router import router as donor_router
 from routers.requirement_router import router as requirement_router
 from uuid import uuid4
 from AllocationSystem import get_allocation_system
+
+
+load_dotenv()
 
 
 @asynccontextmanager
@@ -41,7 +48,8 @@ app.add_middleware(
 app.include_router(agency_router, prefix="/api", tags=["agencies"])
 app.include_router(donation_router, prefix="/api", tags=["donations"])
 app.include_router(donor_router, prefix="/api", tags=["donors"])
-app.include_router(requirement_router,prefix="/api", tags=["requirements"])
+app.include_router(requirement_router, prefix="/api", tags=["requirements"])
+
 
 @app.websocket("/ws/{agency_id}")
 async def websocket_endpoint(websocket: WebSocket, agency_id: str):
@@ -53,6 +61,7 @@ async def websocket_endpoint(websocket: WebSocket, agency_id: str):
     except WebSocketDisconnect:
         allocation_system.disconnect(agency_id)
         print(f"Agency {agency_id} disconnected.")
+
 
 @app.get("/health")
 async def health():

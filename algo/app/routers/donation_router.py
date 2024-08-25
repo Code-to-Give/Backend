@@ -50,8 +50,8 @@ async def fetch_requirements(db: AsyncSession, skip: int = 0, limit: int = 100):
     return [Requirement.model_validate(agency) for agency in requirements]
 
 
-@router.post("/donations_me", response_model=Donation)
-async def create_donation_me(
+@router.post("/donations/me", response_model=Donation)
+async def create_donation_as_me(
     donation_created: DonationCreated,
     request: Request,
     db: AsyncSession = Depends(get_db),
@@ -72,7 +72,7 @@ async def create_donation_me(
         )
 
     donation = Donation(
-        donor_id=current_user["sub"],
+        donor_id=donor.id,
         food_type=donation_created.food_type,
         quantity=donation_created.quantity,
         location=donation_created.location,
@@ -110,8 +110,8 @@ async def read_donations(skip: int = 0, limit: int = 100, db: AsyncSession = Dep
     return [Donation.model_validate(donation) for donation in donations]
 
 
-@router.get("/donations/me", response_model=Donation)
-async def read_donation_as_me(
+@router.get("/donations/me", response_model=List[Donation])
+async def read_donations_as_me(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
@@ -130,19 +130,13 @@ async def read_donation_as_me(
                 detail="Donor not found"
             )
 
-        # retrieve the donation for the donor
+        # retrieve all donations for the donor
         result = await db.execute(
             select(DonationModel).filter(DonationModel.donor_id == donor.id)
         )
-        donation = result.scalar_one_or_none()
+        donations = result.scalars().all()
 
-        if donation is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Donation not found"
-            )
-
-        return Donation.model_validate(donation)
+        return [Donation.model_validate(donation) for donation in donations]
 
     except HTTPException as e:
         raise e
