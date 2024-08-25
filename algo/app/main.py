@@ -1,7 +1,5 @@
-import os
-
 from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from db.database import get_db
@@ -14,7 +12,21 @@ from routers.requirement_router import router as requirement_router
 from uuid import uuid4
 from AllocationSystem import get_allocation_system
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    async for db in get_db():
+        allocation_system = await get_allocation_system(db)
+        app.state.allocation_system = allocation_system
+        app.state.db = db
+        break  # We only need one database session for initialization
+    yield
+    # Shutdown
+    if hasattr(app.state, 'db'):
+        await app.state.db.close()
+
+app = FastAPI(lifespan=lifespan)
 
 
 app.add_middleware(
@@ -29,9 +41,7 @@ app.add_middleware(
 app.include_router(agency_router, prefix="/api", tags=["agencies"])
 app.include_router(donation_router, prefix="/api", tags=["donations"])
 app.include_router(donor_router, prefix="/api", tags=["donors"])
-app.include_router(requirement_router, prefix="/api", tags=["requirements"])
-allocation_system = get_allocation_system()
-
+app.include_router(requirement_router,prefix="/api", tags=["requirements"])
 
 @app.websocket("/ws/{agency_id}")
 async def websocket_endpoint(websocket: WebSocket, agency_id: str):
@@ -44,13 +54,6 @@ async def websocket_endpoint(websocket: WebSocket, agency_id: str):
         allocation_system.disconnect(agency_id)
         print(f"Agency {agency_id} disconnected.")
 
-
 @app.get("/health")
 async def health():
     return {"message": "Algorithm service is up and running!"}
-
-# Function to get the AllocationSystem instance
-
-
-def get_allocation_system():
-    return allocation_system

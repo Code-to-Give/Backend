@@ -5,7 +5,6 @@ from uuid import UUID, uuid4
 from typing import Dict, Tuple, Optional
 from datetime import datetime
 
-
 class Donation(BaseModel):
     donor_id: UUID
     food_type: str
