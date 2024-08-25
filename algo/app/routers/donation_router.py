@@ -161,27 +161,62 @@ async def read_donations_as_me(
     current_user=Depends(get_current_user)
 ):
     try:
-        # check if the donor exists
-        result = await db.execute(
-            select(DonorModel).filter(
-                DonorModel.name == current_user["company_name"]
-            )
-        )
-        donor: DonorModel = result.scalar_one_or_none()
+        if current_user["role"] == "Beneficiary":
 
-        if donor is None:
+            # check if the agency exists
+            result = await db.execute(
+                select(AgencyModel).filter(
+                    AgencyModel.name == current_user["company_name"]
+                )
+            )
+            agency: AgencyModel = result.scalar_one_or_none()
+
+            if agency is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Agency not found"
+                )
+
+            # retrieve all donations for the agency
+            result = await db.execute(
+                select(DonationModel).filter(
+                    DonationModel.agency_id == agency.id)
+            )
+            donations = result.scalars().all()
+
+            return [Donation.model_validate(donation) for donation in donations]
+
+        elif current_user["role"] == "Donor":
+
+            # check if the donor exists
+            result = await db.execute(
+                select(DonorModel).filter(
+                    DonorModel.name == current_user["company_name"]
+                )
+            )
+            donor: DonorModel = result.scalar_one_or_none()
+
+            if donor is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Donor not found"
+                )
+
+            # retrieve all donations for the donor
+            result = await db.execute(
+                select(DonationModel).filter(
+                    DonationModel.donor_id == donor.id)
+            )
+            donations = result.scalars().all()
+
+            return [Donation.model_validate(donation) for donation in donations]
+        elif current_user["role"] == "Volunteer":
+            pass
+        else:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Donor not found"
+                status_code=400,
+                detail="Role not found"
             )
-
-        # retrieve all donations for the donor
-        result = await db.execute(
-            select(DonationModel).filter(DonationModel.donor_id == donor.id)
-        )
-        donations = result.scalars().all()
-
-        return [Donation.model_validate(donation) for donation in donations]
 
     except HTTPException as e:
         raise e
