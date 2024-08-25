@@ -19,7 +19,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
 # ALGORITHM = "HS256"
 ALGORITHM = "RS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 JWT_REFRESH_SECRET_KEY = os.getenv("JWT_REFRESH_SECRET_KEY")
@@ -43,6 +43,9 @@ def create_user(db: Database, user: UserRegister) -> Dict[str, Any]:
         is_verified = True
     else:
         is_verified = False
+
+    if user.role == Role.volunteer:
+        user.company_name = None
 
     user = {
         "_id": str(uuid4()),
