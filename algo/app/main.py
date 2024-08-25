@@ -7,6 +7,7 @@ from schemas.Agency import Agency
 from routers.agency_router import router as agency_router
 from routers.donation_router import router as donation_router
 from routers.donor_router import router as donor_router
+from routers.requirement_router import router as requirement_router
 from uuid import uuid4
 from AllocationSystem import get_allocation_system
 
@@ -17,7 +18,7 @@ app = FastAPI()
 app.include_router(agency_router, prefix="/api", tags=["agencies"])
 app.include_router(donation_router, prefix="/api", tags=["donations"])
 app.include_router(donor_router, prefix="/api", tags=["donors"])
-
+app.include_router(requirement_router,prefix="/api", tags=["requirements"])
 allocation_system = get_allocation_system()
 
 @app.websocket("/ws/{agency_id}")

@@ -6,8 +6,21 @@ from db.models import AgencyModel
 from schemas.Agency import Agency
 from typing import List, Dict, Tuple
 from uuid import UUID
+from pydantic import BaseModel
 
 router = APIRouter()
+
+class AgencyUpdate(BaseModel):
+    agency_id: UUID
+
+class AgencyRequirementsUpdate(BaseModel):
+    requirements: Dict[str, int]
+
+class AgencyPriorityFlagUpdate(BaseModel):
+    priority_flag: bool
+
+class AgencyLocationUpdate(BaseModel):
+    location: Tuple[float, float]
 
 @router.post("/agencies", response_model=Agency)
 async def create_agency(agency: Agency, db: AsyncSession = Depends(get_db)):
@@ -56,34 +69,34 @@ async def delete_agency(agency_id: UUID, db: AsyncSession = Depends(get_db)):
     return Agency.model_validate(agency)
 
 @router.patch("/agencies/{agency_id}/requirements", response_model=Agency)
-async def update_agency_requirements(agency_id: UUID, requirements: Dict[str, int], db: AsyncSession = Depends(get_db)):
+async def update_agency_requirements(agency_id: UUID, requirements_update: AgencyRequirementsUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(AgencyModel).filter(AgencyModel.id == agency_id))
     agency = result.scalar_one_or_none()
     if agency is None:
         raise HTTPException(status_code=404, detail="Agency not found")
-    agency.requirements = requirements
+    agency.requirements = requirements_update.requirements
     await db.commit()
     await db.refresh(agency)
     return Agency.model_validate(agency)
 
 @router.patch("/agencies/{agency_id}/priority-flag", response_model=Agency)
-async def set_agency_priority_flag(agency_id: UUID, priority_flag: bool, db: AsyncSession = Depends(get_db)):
+async def set_agency_priority_flag(agency_id: UUID, priority_update: AgencyPriorityFlagUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(AgencyModel).filter(AgencyModel.id == agency_id))
     agency = result.scalar_one_or_none()
     if agency is None:
         raise HTTPException(status_code=404, detail="Agency not found")
-    agency.priority_flag = priority_flag
+    agency.priority_flag = priority_update.priority_flag
     await db.commit()
     await db.refresh(agency)
     return Agency.model_validate(agency)
 
 @router.patch("/agencies/{agency_id}/location", response_model=Agency)
-async def update_agency_location(agency_id: UUID, location: Tuple[float, float], db: AsyncSession = Depends(get_db)):
+async def update_agency_location(agency_id: UUID, location_update: AgencyLocationUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(AgencyModel).filter(AgencyModel.id == agency_id))
     agency = result.scalar_one_or_none()
     if agency is None:
         raise HTTPException(status_code=404, detail="Agency not found")
-    agency.location = location
+    agency.location = location_update.location
     await db.commit()
     await db.refresh(agency)
     return Agency.model_validate(agency)

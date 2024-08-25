@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from db.database import get_db
-from db.models import DonationModel, AgencyModel
+from db.models import DonationModel, AgencyModel, RequirementModel
 from schemas.Donation import Donation
 from schemas.Agency import Agency
+from schemas.Requirement import Requirement
 from schemas.DonationStatus import DonationStatus
 from AllocationSystem import AllocationSystem
 from routers.agency_router import read_agencies
@@ -20,6 +21,9 @@ class AgencyUpdate(BaseModel):
     
 class DonationStatusUpdate(BaseModel):
     status: DonationStatus
+    
+class DonationLocationUpdate(BaseModel):
+    location: Tuple[float, float]
 
 # Temporary function for non-routed reads
 async def fetch_agencies(db: AsyncSession, skip: int = 0, limit: int = 100):
@@ -27,6 +31,11 @@ async def fetch_agencies(db: AsyncSession, skip: int = 0, limit: int = 100):
     agencies = result.scalars().all()
     return [Agency.model_validate(agency) for agency in agencies]
 
+# Temporary function for non-routed reads
+async def fetch_requirements(db: AsyncSession, skip: int = 0, limit: int = 100):
+    result = await db.execute(select(RequirementModel).offset(skip).limit(limit))
+    requirements = result.scalars().all()
+    return [Requirement.model_validate(agency) for agency in requirements]
 
 @router.post("/donations", response_model=Donation)
 async def create_donation(donation: Donation, db: AsyncSession = Depends(get_db), allocation_system: AllocationSystem = Depends(get_allocation_system)
@@ -38,7 +47,8 @@ async def create_donation(donation: Donation, db: AsyncSession = Depends(get_db)
     
     # Trigger the allocation process for the new donation
     agencies = await fetch_agencies(db)  
-    await allocation_system.allocate_donation(donation, agencies)
+    requirements = await fetch_requirements(db)
+    await allocation_system.allocate_donation(donation, agencies, requirements)
     
     return Donation.model_validate(db_donation)
 
@@ -81,12 +91,12 @@ async def delete_donation(donation_id: UUID, db: AsyncSession = Depends(get_db))
     return Donation.model_validate(donation)
 
 @router.patch("/donations/{donation_id}/status", response_model=Donation)
-async def update_donation_status(donation_id: UUID, status: DonationStatus, db: AsyncSession = Depends(get_db)):
+async def update_donation_status(donation_id: UUID, update_data: DonationStatusUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonationModel).filter(DonationModel.id == donation_id))
     donation = result.scalar_one_or_none()
     if donation is None:
         raise HTTPException(status_code=404, detail="Donation not found")
-    donation.status = status
+    donation.status = update_data.status
     await db.commit()
     await db.refresh(donation)
     return Donation.model_validate(donation)
@@ -103,12 +113,12 @@ async def update_donation_agency(donation_id: UUID, update_data: AgencyUpdate, d
     return Donation.model_validate(donation)
 
 @router.patch("/donations/{donation_id}/location", response_model=Donation)
-async def update_donation_location(donation_id: UUID, location: Tuple[float, float], db: AsyncSession = Depends(get_db)):
+async def update_donation_location(donation_id: UUID, update_data: DonationLocationUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonationModel).filter(DonationModel.id == donation_id))
     donation = result.scalar_one_or_none()
     if donation is None:
         raise HTTPException(status_code=404, detail="Donation not found")
-    donation.location = location
+    donation.location = update_data.location
     await db.commit()
     await db.refresh(donation)
     return Donation.model_validate(donation)
