@@ -5,7 +5,7 @@ from dependencies import get_database
 from models.users import User, UserRegister, Token, UserLogin
 from services import userServices
 
-router = APIRouter(prefix="/users", tags=['users'])
+router = APIRouter(prefix="/api/users", tags=['users'])
 
 
 @router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
