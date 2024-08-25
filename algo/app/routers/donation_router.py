@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from db.database import get_db
 from db.models import DonationModel, AgencyModel, RequirementModel
-from schemas.Donation import Donation
+from schemas.Donation import Donation, DonationCreated
 from schemas.Agency import Agency
 from schemas.Requirement import Requirement
 from schemas.DonationStatus import DonationStatus
@@ -96,7 +96,7 @@ async def create_donation_me(
     # # Trigger the allocation process for the new donation
     agencies = await fetch_agencies(db)
     requirements = await fetch_requirements(db)
-    await allocation_system.allocate_donation(donation, agencies, requirements)
+    await allocation_system.allocate_donation(donation, agencies)
 
 @router.post("/donations", response_model=Donation)
 async def create_donation(donation: Donation, request: Request, db: AsyncSession = Depends(get_db)
