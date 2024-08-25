@@ -142,6 +142,24 @@ async def update_donor_location(
     return Donor.from_orm(donor)
 
 
+@router.patch("/donors/me/location", response_model=Donor)
+async def update_donor_location(
+        req: DonorUpdate,
+        db: AsyncSession = Depends(get_db),
+        current_user=Depends(get_current_user)):
+
+    location: Tuple[float, float] = tuple(req.location)
+
+    result = await db.execute(select(DonorModel).filter(DonorModel.name == current_user["company_name"]))
+    donor = result.scalar_one_or_none()
+    if donor is None:
+        raise HTTPException(status_code=404, detail="Donor not found")
+    donor.location = location
+    await db.commit()
+    await db.refresh(donor)
+    return Donor.from_orm(donor)
+
+
 @router.patch("/donors/{donor_id}/location", response_model=Donor)
 async def update_donor_location(donor_id: str, location_update: DonorLocationUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonorModel).filter(DonorModel.id == donor_id))
