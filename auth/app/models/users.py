@@ -27,7 +27,7 @@ class UserBase(BaseModel):
 class UserRegister(BaseModel):
     email: EmailStr = Field(max_length=255)
     password: SecretStr = Field(min_length=8, max_length=40)
-    company_name: str = Field(max_length=255)
+    company_name: Optional[str] = Field(None, max_length=255)
     name: str = Field(max_length=255)
     phone_number: PhoneNumber = Field()
     role: Optional[Role] = Field(None)
