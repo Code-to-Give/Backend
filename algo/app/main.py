@@ -28,16 +28,23 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Include routers
 app.include_router(agency_router, prefix="/api", tags=["agencies"])
 app.include_router(donation_router, prefix="/api", tags=["donations"])
 app.include_router(donor_router, prefix="/api", tags=["donors"])
 app.include_router(requirement_router,prefix="/api", tags=["requirements"])
 
-
 @app.websocket("/ws/{agency_id}")
 async def websocket_endpoint(websocket: WebSocket, agency_id: str):
-    allocation_system = get_allocation_system()
     await allocation_system.connect(websocket, agency_id)
     try:
         while True:
