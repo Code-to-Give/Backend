@@ -11,13 +11,14 @@ from pydantic_extra_types.phone_numbers import PhoneNumber
 class Role(str, Enum):
     donor = "Donor"
     beneficiary = "Beneficiary"
+    volunteer = "Volunteer"
 
 
 class UserBase(BaseModel):
     email: EmailStr = Field(max_length=255)
     is_verified: bool = False
     is_superuser: bool = False
-    company_name: str = Field(max_length=255)
+    company_name: Optional[str] = Field(None, max_length=255)
     name: str = Field(max_length=255)
     phone_number: PhoneNumber = Field()
     role: Optional[Role] = Field(None)
