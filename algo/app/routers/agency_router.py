@@ -91,7 +91,6 @@ async def read_agency(agency_id: UUID, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Agency not found")
     return Agency.model_validate(agency)
 
-
 @router.put("/agencies/{agency_id}", response_model=Agency)
 async def update_agency(agency_id: UUID, agency: Agency, db: AsyncSession = Depends(get_db)):
 
