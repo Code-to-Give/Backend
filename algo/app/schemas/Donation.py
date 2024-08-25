@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 from typing import Dict, Tuple, Optional
 from datetime import datetime
 
+
 class Donation(BaseModel):
     donor_id: UUID
     food_type: str
@@ -14,6 +15,13 @@ class Donation(BaseModel):
     status: str = DonationStatus.READY
     agency_id: Optional[UUID] = None
     expiry_time: datetime = Field(default_factory=datetime.utcnow)
-    
+
     model_config = ConfigDict(from_attributes=True)
-    
+
+
+class DonationCreated(BaseModel):
+    food_type: str
+    quantity: int
+    location: Tuple[float, float] = (0.0, 0.0)
+    status: str = DonationStatus.READY
+    expiry_time: datetime = Field(default_factory=datetime.utcnow)
