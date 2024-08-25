@@ -7,9 +7,7 @@ from schemas.Donor import Donor, DonorLocationUpdate, DonorDonationsUpdate
 from typing import List, Tuple
 from uuid import UUID
 from pydantic import BaseModel
-
 from utils.jwt_auth import get_current_user
-from pydantic import BaseModel
 
 router = APIRouter()
 

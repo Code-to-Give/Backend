@@ -15,7 +15,7 @@ class Donation(BaseModel):
     status: str = DonationStatus.READY
     agency_id: Optional[UUID] = None
     expiry_time: datetime = Field(default_factory=datetime.utcnow)
-
+    volunteer_id: Optional[UUID] = None
     model_config = ConfigDict(from_attributes=True)
 
 

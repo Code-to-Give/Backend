@@ -8,11 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update
 from db.database import get_db
-from db.models import AgencyModel, DonationModel, RequirementModel
+from db.models import AgencyModel, DonationModel, RequirementModel, VolunteerModel
 from schemas.Agency import Agency
 from schemas.FoodType import FoodType
 from schemas.Requirement import Requirement
 from schemas.Donation import Donation
+from schemas.Volunteer import Volunteer
 from schemas.DonationStatus import DonationStatus
 from fastapi import Depends
 
@@ -95,7 +96,7 @@ class AllocationSystem():
                     await self.update_donation_in_db(donation)
                     del self.allocation_queues[donation.id]
                     del self.allocation_timers[donation.id]
-            await asyncio.sleep(10)  # Check every 10 seconds
+            await asyncio.sleep(10)  # Check every 10s for demo
 
     def compute_distance(self, agency_location: List[float], donation_location: List[float]) -> float:
         """Compute distance in km between 2 points of lat/long."""
@@ -171,6 +172,38 @@ class AllocationSystem():
         )
         await self.db.execute(stmt)
         await self.db.commit()
+        
+    async def assign_volunteer_to_donation(self, donation: Donation):
+        volunteers = await self.get_all_volunteers_from_db()
+        nearest_volunteer = await self.find_nearest_suitable_volunteer(donation, volunteers)
+        
+        if nearest_volunteer is None:
+            print(f"No suitable volunteer found for Donation {donation.id}")
+            return
+
+        donation.volunteer_id = nearest_volunteer.id
+        await self.update_donation_in_db(donation)
+        print(f"Volunteer {nearest_volunteer.id} assigned to Donation {donation.id}")
+
+    async def find_nearest_suitable_volunteer(self, donation: Donation, volunteers: List[Volunteer]) -> Optional[Volunteer]:
+        donation_location = tuple(donation.location)
+        suitable_volunteers = [
+            (volunteer, geodesic(donation_location, tuple(volunteer.location)).km)
+            for volunteer in volunteers
+            if volunteer.capacity >= donation.quantity
+        ]
+
+        if not suitable_volunteers:
+            return None
+
+        # Sort by distance and return the nearest
+        return min(suitable_volunteers, key=lambda x: x[1])[0]
+
+    async def get_all_volunteers_from_db(self) -> List[Volunteer]:
+        result = await self.db.execute(select(VolunteerModel))
+        volunteers = result.scalars().all()
+        return [Volunteer.model_validate(volunteer) for volunteer in volunteers]
+
 
 async def get_allocation_system(db: AsyncSession = Depends(get_db))->AllocationSystem:
     return await AllocationSystem.get_instance(db)
