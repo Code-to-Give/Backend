@@ -30,17 +30,15 @@ class DonationStatusUpdate(BaseModel):
 class DonationLocationUpdate(BaseModel):
     location: Tuple[float, float]
 
+
 # Temporary function for non-routed reads
-
-
 async def fetch_agencies(db: AsyncSession, skip: int = 0, limit: int = 100):
     result = await db.execute(select(AgencyModel).offset(skip).limit(limit))
     agencies = result.scalars().all()
     return [Agency.model_validate(agency) for agency in agencies]
 
+
 # Temporary function for non-routed reads
-
-
 async def fetch_requirements(db: AsyncSession, skip: int = 0, limit: int = 100):
     result = await db.execute(select(RequirementModel).offset(skip).limit(limit))
     requirements = result.scalars().all()
