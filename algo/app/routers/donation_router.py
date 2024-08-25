@@ -41,31 +41,72 @@ class DonationResponse(BaseModel):
 async def handle_donation_response(
     donation_id: UUID,
     action: str,
-    agency_id: UUID,
-    request: Request,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    allocation_system: AsyncSession = Depends(get_allocation_system),
+    current_user=Depends(get_current_user)
 ):
-    if action not in ['accept', 'reject']:
+    try:
+        if action not in ['accept', 'reject']:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid action. Must be 'accept' or 'reject'."
+            )
+
+        if current_user["role"] != "Beneficiary":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Unauthorized user. Agency role required."
+            )
+
+        # check if the agency exists
+        result = await db.execute(
+            select(AgencyModel).filter(
+                AgencyModel.name == current_user["company_name"]
+            )
+        )
+        agency: AgencyModel = result.scalars().first()
+
+        if agency is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Agency not found"
+            )
+
+        # Process the action
+        if action == 'accept':
+            success = await allocation_system.accept_donation(donation_id, agency.id)
+        else:  # action == 'reject'
+            success = await allocation_system.reject_donation(donation_id, agency.id)
+
+        message = (
+            f"""Failed to {action} the donation (ID: {donation_id}) for agency (ID: {agency.id}).
+            This could be because the donation has already been processed, the agency is not first in the allocation queue,
+            or there was an unexpected issue. Please check the current status of the donation and try again if necessary."""
+        )
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=message
+            )
+
+        return DonationResponse(
+            donation_id=donation_id,
+            agency_id=agency.id,
+            action=action,
+            success=success
+        )
+
+    except HTTPException as http_err:
+        print(f"HTTP error during donation {action}: {str(http_err)}")
+        raise http_err
+
+    except Exception as e:
+        print(f"Unexpected error during donation {action}: {str(e)}")
         raise HTTPException(
-            status_code=400, detail="Invalid action. Must be 'accept' or 'reject'.")
-
-    allocation_system = await get_allocation_system(request)
-
-    if action == 'accept':
-        success = await allocation_system.accept_donation(donation_id, agency_id)
-    else:  # action == 'reject'
-        success = await allocation_system.reject_donation(donation_id, agency_id)
-
-    if not success:
-        raise HTTPException(status_code=400,
-                            detail=f"Unable to {action} donation. It may have already been processed or the agency is not first in queue.")
-
-    return DonationResponse(
-        donation_id=donation_id,
-        agency_id=agency_id,
-        action=action,
-        success=success
-    )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while processing the donation."
+        )
 
 
 async def get_allocation_system(request):
@@ -95,19 +136,20 @@ async def create_donation_as_me(
     allocation_system: AsyncSession = Depends(get_allocation_system),
     current_user=Depends(get_current_user)
 ):
-
     result = await db.execute(
         select(DonorModel).filter(
             DonorModel.name == current_user["company_name"]
         )
     )
-    donor: DonorModel = result.scalar_one_or_none()
+    donors = result.scalars().all()
 
-    if donor is None:
+    if not donors:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Donor not found"
         )
+
+    donor = donors[0]
 
     donation = Donation(
         donor_id=donor.id,
@@ -118,21 +160,18 @@ async def create_donation_as_me(
         expiry_time=donation_created.expiry_time
     )
 
-    allocation_system = await get_allocation_system()
-
     db_donation = DonationModel(**donation.model_dump())
     db.add(db_donation)
     await db.commit()
     await db.refresh(db_donation)
 
-    # # Trigger the allocation process for the new donation
     agencies = await fetch_agencies(db)
     await allocation_system.allocate_donation(donation, agencies)
 
-    return Donation.model_validate(donation)
+    return Donation.model_validate(db_donation)
 
 
-@router.post("/donations", response_model=Donation)
+@ router.post("/donations", response_model=Donation)
 async def create_donation(donation: Donation, request: Request, db: AsyncSession = Depends(get_db)
                           ):
     allocation_system = await get_allocation_system(request)
@@ -148,40 +187,79 @@ async def create_donation(donation: Donation, request: Request, db: AsyncSession
     return Donation.model_validate(db_donation)
 
 
-@router.get("/donations", response_model=List[Donation])
+@ router.get("/donations", response_model=List[Donation])
 async def read_donations(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonationModel).offset(skip).limit(limit))
     donations = result.scalars().all()
     return [Donation.model_validate(donation) for donation in donations]
 
 
-@router.get("/donations/me", response_model=List[Donation])
+@ router.get("/donations/me", response_model=List[Donation])
 async def read_donations_as_me(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
     try:
-        # check if the donor exists
-        result = await db.execute(
-            select(DonorModel).filter(
-                DonorModel.name == current_user["company_name"]
-            )
-        )
-        donor: DonorModel = result.scalar_one_or_none()
+        if current_user["role"] == "Beneficiary":
 
-        if donor is None:
+            # check if the agency exists
+            result = await db.execute(
+                select(AgencyModel).filter(
+                    AgencyModel.name == current_user["company_name"]
+                )
+            )
+            agencies: List[AgencyModel] = result.scalars().all()
+
+            if not agencies:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Agency not found"
+                )
+
+            agency = agencies[0]
+
+            # retrieve all donations for the agency
+            result = await db.execute(
+                select(DonationModel).filter(
+                    DonationModel.agency_id == agency.id)
+            )
+            donations = result.scalars().all()
+
+            return [Donation.model_validate(donation) for donation in donations]
+
+        elif current_user["role"] == "Donor":
+
+            # check if the donor exists
+            result = await db.execute(
+                select(DonorModel).filter(
+                    DonorModel.name == current_user["company_name"]
+                )
+            )
+            donors: List[DonorModel] = result.scalars().all()
+
+            if not donors:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Donor not found"
+                )
+
+            donor = donors[0]
+
+            # retrieve all donations for the donor
+            result = await db.execute(
+                select(DonationModel).filter(
+                    DonationModel.donor_id == donor.id)
+            )
+            donations = result.scalars().all()
+
+            return [Donation.model_validate(donation) for donation in donations]
+        elif current_user["role"] == "Volunteer":
+            pass
+        else:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Donor not found"
+                status_code=400,
+                detail="Role not found"
             )
-
-        # retrieve all donations for the donor
-        result = await db.execute(
-            select(DonationModel).filter(DonationModel.donor_id == donor.id)
-        )
-        donations = result.scalars().all()
-
-        return [Donation.model_validate(donation) for donation in donations]
 
     except HTTPException as e:
         raise e
@@ -194,7 +272,7 @@ async def read_donations_as_me(
         )
 
 
-@router.get("/donations/{donation_id}", response_model=Donation)
+@ router.get("/donations/{donation_id}", response_model=Donation)
 async def read_donation(donation_id: UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonationModel).filter(DonationModel.id == donation_id))
     donation = result.scalar_one_or_none()
@@ -203,7 +281,7 @@ async def read_donation(donation_id: UUID, db: AsyncSession = Depends(get_db)):
     return Donation.model_validate(donation)
 
 
-@router.put("/donations/{donation_id}", response_model=Donation)
+@ router.put("/donations/{donation_id}", response_model=Donation)
 async def update_donation(donation_id: UUID, donation: Donation, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonationModel).filter(DonationModel.id == donation_id))
     db_donation = result.scalar_one_or_none()
@@ -218,7 +296,7 @@ async def update_donation(donation_id: UUID, donation: Donation, db: AsyncSessio
     return Donation.model_validate(db_donation)
 
 
-@router.delete("/donations/{donation_id}", response_model=Donation)
+@ router.delete("/donations/{donation_id}", response_model=Donation)
 async def delete_donation(donation_id: UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonationModel).filter(DonationModel.id == donation_id))
     donation = result.scalar_one_or_none()
@@ -229,7 +307,7 @@ async def delete_donation(donation_id: UUID, db: AsyncSession = Depends(get_db))
     return Donation.model_validate(donation)
 
 
-@router.patch("/donations/{donation_id}/status", response_model=Donation)
+@ router.patch("/donations/{donation_id}/status", response_model=Donation)
 async def update_donation_status(donation_id: UUID, update_data: DonationStatusUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonationModel).filter(DonationModel.id == donation_id))
     donation = result.scalar_one_or_none()
@@ -241,7 +319,7 @@ async def update_donation_status(donation_id: UUID, update_data: DonationStatusU
     return Donation.model_validate(donation)
 
 
-@router.patch("/donations/{donation_id}/agency", response_model=Donation)
+@ router.patch("/donations/{donation_id}/agency", response_model=Donation)
 async def update_donation_agency(donation_id: UUID, update_data: AgencyUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonationModel).filter(DonationModel.id == donation_id))
     donation = result.scalar_one_or_none()
@@ -253,7 +331,7 @@ async def update_donation_agency(donation_id: UUID, update_data: AgencyUpdate, d
     return Donation.model_validate(donation)
 
 
-@router.patch("/donations/{donation_id}/location", response_model=Donation)
+@ router.patch("/donations/{donation_id}/location", response_model=Donation)
 async def update_donation_location(donation_id: UUID, update_data: DonationLocationUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonationModel).filter(DonationModel.id == donation_id))
     donation = result.scalar_one_or_none()

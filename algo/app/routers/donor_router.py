@@ -11,11 +11,14 @@ from utils.jwt_auth import get_current_user
 
 router = APIRouter()
 
+
 class DonorLocationUpdate(BaseModel):
     location: Tuple[float, float]
 
+
 class DonorDonationsUpdate(BaseModel):
     donations: float
+
 
 @router.post("/donors", response_model=Donor)
 async def create_donor(
@@ -30,16 +33,15 @@ async def create_donor(
 
     # check if a company_name matches name
     result = await db.execute(select(DonorModel).filter_by(name=current_user["company_name"]))
-    existing_donor = result.scalars().first()
+    donors = result.scalars().all()
 
-    # if matches then dont create
-    if existing_donor:
-        return existing_donor
-
-    # if dont match, create the company
-    donor = Donor(
-        name=current_user["company_name"]
-    )
+    if not donors:
+        # if dont match, create the company
+        donor = Donor(
+            name=current_user["company_name"]
+        )
+    else:
+        donor = donors[0]
 
     db_donor = DonorModel(**donor.model_dump())
     db.add(db_donor)
@@ -67,9 +69,13 @@ async def read_donor_as_me(
         )
 
     result = await db.execute(select(DonorModel).filter(DonorModel.name == current_user["company_name"]))
-    donor = result.scalar_one_or_none()
-    if donor is None:
+    donors = result.scalars().all()
+
+    if not donors:
         raise HTTPException(status_code=404, detail="Donor not found")
+
+    donor = donors[0]
+
     return Donor.from_orm(donor)
 
 
@@ -95,19 +101,21 @@ async def read_donor(donor_id: UUID, db: AsyncSession = Depends(get_db)):
 #     await db.refresh(db_donor)
 #     return Donor.from_orm(db_donor)
 
+
 @router.put("/donors/{donor_id}", response_model=Donor)
 async def update_donor(donor_id: UUID, donor: Donor, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DonorModel).filter(DonorModel.id == donor_id))
     db_donor = result.scalar_one_or_none()
     if db_donor is None:
         raise HTTPException(status_code=404, detail="Donor not found")
-    
+
     for key, value in donor.dict(exclude_unset=True).items():
         setattr(db_donor, key, value)
-    
+
     await db.commit()
     await db.refresh(db_donor)
     return Donor.model_validate(db_donor)
+
 
 @router.delete("/donors/{donor_id}", response_model=Donor)
 async def delete_donor(donor_id: str, db: AsyncSession = Depends(get_db)):
@@ -118,6 +126,7 @@ async def delete_donor(donor_id: str, db: AsyncSession = Depends(get_db)):
     await db.delete(donor)
     await db.commit()
     return Donor.model_validate(donor)
+
 
 @router.patch("/donors/me/location", response_model=Donor)
 async def update_donor_location_me(
@@ -165,6 +174,5 @@ async def update_donor_donations(donor_id: str, donations_update: DonorDonations
     donor.donations = donations_update.donations
     await db.commit()
     await db.refresh(donor)
-    
-    return Donor.model_validate(donor)
 
+    return Donor.model_validate(donor)

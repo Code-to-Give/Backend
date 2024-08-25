@@ -168,16 +168,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Da
         if not user:
             raise credentials_exception
 
-        return User(
-            id=user_id,
-            email=user['email'],
-            company_name=user.get('company_name', ''),
-            name=user.get('name', ''),
-            phone_number=user.get('phone_number', ''),
-            role=Role(user['role']) if user.get('role') else None,
-            is_verified=user.get('is_verified', False),
-            is_superuser=user.get('is_superuser', False)
-        )
+        return user
 
     except jwt.ExpiredSignatureError:
         raise HTTPException(
