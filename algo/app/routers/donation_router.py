@@ -53,8 +53,10 @@ async def handle_donation_response(
     else:  # action == 'reject'
         success = await allocation_system.reject_donation(donation_id, agency_id)
     
+    message = f"Unable to {action} donation. It may have already been processed or the agency is not first in queue."
+    
     if not success:
-        raise HTTPException(status_code=400, detail=f"Unable to {action} donation. It may have already been processed or the agency is not first in queue.")
+        raise HTTPException(status_code=400, detail=message)
     
     return DonationResponse(
         donation_id=donation_id,
