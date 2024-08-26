@@ -41,7 +41,7 @@ async def create_donor(
         # if dont match, create the company
         donor = DonorModel(
             name=current_user["company_name"],
-            donation=0.0
+            donations=0.0
         )
         db.add(donor)
         await db.commit()
