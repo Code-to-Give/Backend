@@ -42,7 +42,8 @@ class AgencyModel(Base):
 class DonationModel(Base):
     __tablename__ = "donations"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True,
+                index=True, default=uuid.uuid4)
     donor_id = Column(UUID(as_uuid=True), ForeignKey(
         "donors.id"), nullable=False)
     # Represents a specific type of food
@@ -62,7 +63,8 @@ class DonationModel(Base):
 class DonorModel(Base):
     __tablename__ = "donors"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True,
+                index=True, default=uuid.uuid4)
     name = Column(String, nullable=False)
     location = Column(JSON, nullable=False, default=lambda: [0.0, 0.0])
     # Assuming this represents total donation weight
@@ -75,7 +77,8 @@ class DonorModel(Base):
 class RequirementModel(Base):
     __tablename__ = "requirements"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True,
+                index=True, default=uuid.uuid4)
     agency_id = Column(UUID(as_uuid=True), ForeignKey(
         'agencies.id'), nullable=False)
     food_type = Column(SqlEnum(FoodType), nullable=False)

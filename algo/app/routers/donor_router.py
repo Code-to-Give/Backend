@@ -39,17 +39,19 @@ async def create_donor(
 
     if not donors:
         # if dont match, create the company
-        donor = Donor(
-            name=current_user["company_name"]
+        donor = DonorModel(
+            name=current_user["company_name"],
+            donation=0.0
         )
+        db.add(donor)
+        await db.commit()
+        await db.refresh(donor)
     else:
         donor = donors[0]
 
-    db_donor = DonorModel(**donor.model_dump())
-    db.add(db_donor)
-    await db.commit()
-    await db.refresh(db_donor)
-    return Donor.model_validate(db_donor)
+    # db_donor = DonorModel(**donor.model_dump())
+
+    return Donor.model_validate(donor)
 
 
 @router.get("/donors", response_model=List[Donor])
@@ -77,6 +79,9 @@ async def read_donor_as_me(
         raise HTTPException(status_code=404, detail="Donor not found")
 
     donor = donors[0]
+
+    if donor.donations is None:
+        donor.donations = 0.0
 
     return Donor.from_orm(donor)
 
