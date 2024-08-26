@@ -160,31 +160,31 @@ async def create_donation_as_me(
         expiry_time=donation_created.expiry_time
     )
 
-    db_donation = DonationModel(**donation.model_dump())
-    db.add(db_donation)
+    # db_donation = DonationModel(**donation.model_dump())
+    db.add(donation)
     await db.commit()
-    await db.refresh(db_donation)
+    await db.refresh(donation)
 
     agencies = await fetch_agencies(db)
     await allocation_system.allocate_donation(donation, agencies)
 
-    return Donation.model_validate(db_donation)
+    return Donation.model_validate(donation)
 
 
 @ router.post("/donations", response_model=Donation)
 async def create_donation(donation: Donation, request: Request, db: AsyncSession = Depends(get_db)
                           ):
     allocation_system = await get_allocation_system(request)
-    db_donation = DonationModel(**donation.model_dump())
-    db.add(db_donation)
+    # db_donation = DonationModel(**donation.model_dump())
+    db.add(donation)
     await db.commit()
-    await db.refresh(db_donation)
+    await db.refresh(donation)
 
     agencies = await fetch_agencies(db)
     # requirements = await fetch_requirements(db)
     await allocation_system.allocate_donation(donation, agencies)
 
-    return Donation.model_validate(db_donation)
+    return Donation.model_validate(donation)
 
 
 @ router.get("/donations", response_model=List[Donation])

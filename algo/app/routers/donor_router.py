@@ -43,11 +43,11 @@ async def create_donor(
     else:
         donor = donors[0]
 
-    db_donor = DonorModel(**donor.model_dump())
-    db.add(db_donor)
+    # db_donor = DonorModel(**donor.model_dump())
+    db.add(donor)
     await db.commit()
-    await db.refresh(db_donor)
-    return Donor.model_validate(db_donor)
+    await db.refresh(donor)
+    return Donor.model_validate(donor)
 
 
 @router.get("/donors", response_model=List[Donor])
