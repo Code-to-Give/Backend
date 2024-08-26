@@ -6,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from enum import Enum
 import uuid
 from .database import Base
+from schemas.DonationStatus import DonationStatus
 
 # Enums
 
@@ -16,12 +17,6 @@ class FoodType(str, Enum):
     VEGETARIAN = 'vegetarian'
     NON_BEEF = 'no-beef'
 
-
-class DonationStatus(str, Enum):
-    READY = 'Ready'
-    ALLOCATED = 'Allocated'
-    ACCEPTED = 'Accepted'
-    COLLECTED = 'Collected'
 
 # Entity models
 
