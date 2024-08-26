@@ -16,22 +16,24 @@ from schemas.Donation import Donation
 from schemas.DonationStatus import DonationStatus
 from fastapi import Depends
 
+
 class AllocationSystem():
-    
+
     def __init__(self, db):
         self.db = db
-        self.queue_move_interval= int = 600
-        self.allocation_queues= {}
-        self.allocation_timers= {}
-        self.agency_requirements= {}
-        
+        self.queue_move_interval = int = 600
+        self.allocation_queues = {}
+        self.allocation_timers = {}
+        self.agency_requirements = {}
+
     _instance = None
 
     @classmethod
     async def get_instance(cls, db: AsyncSession = None):
         if cls._instance is None:
             if db is None:
-                raise ValueError("Database session is required for initialization")
+                raise ValueError(
+                    "Database session is required for initialization")
             cls._instance = cls(db=db)
             await cls._instance.initialize()
         return cls._instance
@@ -50,7 +52,7 @@ class AllocationSystem():
         """Recover and reinitialize allocation for pending donations."""
         pending_donations = await self.get_pending_donations_from_db()
         agencies = await self.get_all_agencies_from_db()
-        
+
         for donation in pending_donations:
             print(f"Recovering allocation for Donation {donation.id}")
             await self.allocate_donation(donation, agencies)
@@ -68,15 +70,23 @@ class AllocationSystem():
             key=lambda agency: (
                 -agency.priority_flag,
                 self.compute_distance(agency.location, donation.location),
-                -self.compute_needs_score(self.agency_requirements.get(agency.id, {}), donation.food_type, donation.quantity)
+                -self.compute_needs_score(self.agency_requirements.get(
+                    agency.id, {}), donation.food_type, donation.quantity)
             )
         )
-        
-        self.allocation_queues[donation.id] = [agency.id for agency in sorted_agencies]
-        self.allocation_timers[donation.id] = datetime.now() + timedelta(seconds=self.queue_move_interval)
+
+        self.allocation_queues[donation.id] = [
+            agency.id for agency in sorted_agencies]
+        self.allocation_timers[donation.id] = datetime.now(
+        ) + timedelta(seconds=self.queue_move_interval)
         donation.status = DonationStatus.ALLOCATED
+
+        # changes here
+        if self.allocation_queues[donation.id]:
+            donation.agency_id = self.allocation_queues[donation.id][0]
+
         await self.update_donation_in_db(donation)
-        
+
         # Start the allocation management task for this donation
         asyncio.create_task(self.manage_allocation(donation))
 
@@ -87,10 +97,15 @@ class AllocationSystem():
                 # Move to the next agency in the queue
                 self.allocation_queues[donation.id].pop(0)
                 if self.allocation_queues[donation.id]:
-                    self.allocation_timers[donation.id] = now + timedelta(seconds=self.queue_move_interval)
-                    print(f"Moved Donation {donation.id} to next agency {self.allocation_queues[donation.id][0]}")
+                    donation.agency_id = self.allocation_queues[donation.id][0]
+                    await self.update_donation_in_db(donation)
+                    self.allocation_timers[donation.id] = now + \
+                        timedelta(seconds=self.queue_move_interval)
+                    print(
+                        f"Moved Donation {donation.id} to next agency {self.allocation_queues[donation.id][0]}")
                 else:
-                    print(f"No more agencies available for Donation {donation.id}")
+                    print(
+                        f"No more agencies available for Donation {donation.id}")
                     donation.status = DonationStatus.READY
                     await self.update_donation_in_db(donation)
                     del self.allocation_queues[donation.id]
@@ -100,7 +115,7 @@ class AllocationSystem():
     def compute_distance(self, agency_location: List[float], donation_location: List[float]) -> float:
         """Compute distance in km between 2 points of lat/long."""
         return geodesic(tuple(agency_location), tuple(donation_location)).km
-    
+
     def compute_needs_score(self, agency_requirements: Dict[FoodType, int], donation_food_type: FoodType, donation_quantity: int) -> int:
         """Compute a score based on how well the donation meets the agency's requirements."""
         if donation_food_type in agency_requirements:
@@ -123,15 +138,18 @@ class AllocationSystem():
         if donation_id in self.allocation_queues and self.allocation_queues[donation_id][0] == agency_id:
             self.allocation_queues[donation_id].pop(0)
             if self.allocation_queues[donation_id]:
-                self.allocation_timers[donation_id] = datetime.now() + timedelta(seconds=self.queue_move_interval)
-                print(f"Donation {donation_id} rejected by Agency {agency_id}. Moved to next agency.")
+                self.allocation_timers[donation_id] = datetime.now(
+                ) + timedelta(seconds=self.queue_move_interval)
+                print(
+                    f"Donation {donation_id} rejected by Agency {agency_id}. Moved to next agency.")
             else:
                 donation = await self.get_donation_from_db(donation_id)
                 donation.status = DonationStatus.READY
                 await self.update_donation_in_db(donation)
                 del self.allocation_queues[donation_id]
                 del self.allocation_timers[donation_id]
-                print(f"Donation {donation_id} rejected by last agency. Marked as READY.")
+                print(
+                    f"Donation {donation_id} rejected by last agency. Marked as READY.")
             return True
         return False
 
@@ -143,7 +161,8 @@ class AllocationSystem():
     async def get_pending_donations_from_db(self) -> List[Donation]:
         result = await self.db.execute(
             select(DonationModel).filter(
-                DonationModel.status.in_([DonationStatus.READY, DonationStatus.ALLOCATED])
+                DonationModel.status.in_(
+                    [DonationStatus.READY, DonationStatus.ALLOCATED])
             )
         )
         donations = result.scalars().all()
@@ -172,7 +191,8 @@ class AllocationSystem():
         await self.db.execute(stmt)
         await self.db.commit()
 
-async def get_allocation_system(db: AsyncSession = Depends(get_db))->AllocationSystem:
+
+async def get_allocation_system(db: AsyncSession = Depends(get_db)) -> AllocationSystem:
     return await AllocationSystem.get_instance(db)
 
 
