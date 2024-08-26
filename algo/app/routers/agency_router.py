@@ -49,15 +49,15 @@ async def create_agency(
             agency = AgencyModel(
                 name=current_user["company_name"]
             )
+
+            # db_agency = AgencyModel(**agency.model_dump())
+            db.add(agency)
+            await db.commit()
+            await db.refresh(agency)
         else:
             agency = agencies[0]
 
-        # db_agency = AgencyModel(**agency.model_dump())
-        db.add(agency)
-        await db.commit()
-        await db.refresh(agency)
-
-        return Agency.model_validate(agency)
+        return Agency.from_orm(agency)
 
     except HTTPException as e:
         print(f"HTTP error: {str(e)}")
