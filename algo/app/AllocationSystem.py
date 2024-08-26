@@ -65,6 +65,7 @@ class AllocationSystem():
 
     async def allocate_donation(self, donation: Donation, agencies: List[Agency]) -> None:
         """Allocate a donation to the most suitable agencies."""
+        await self.load_requirements()
         sorted_agencies = sorted(
             agencies,
             key=lambda agency: (
@@ -137,18 +138,20 @@ class AllocationSystem():
         return False
 
     async def reject_donation(self, donation_id: UUID, agency_id: UUID):
+        print("reject", self.allocation_queues[donation_id][0], agency_id)
         if donation_id in self.allocation_queues and self.allocation_queues[donation_id][0] == agency_id:
             self.allocation_queues[donation_id].pop(0)
             donation = await self.get_donation_from_db(donation_id)
-            if self.allocation_queues[donation_id]:
+            if self.allocation_queues[donation_id] and len(self.allocation_queues[donation_id]) >= 1:
                 donation.agency_id = self.allocation_queues[donation_id][0]
+                await self.update_donation_in_db(donation)
                 self.allocation_timers[donation_id] = datetime.now(
                 ) + timedelta(seconds=self.queue_move_interval)
                 print(
                     f"Donation {donation_id} rejected by Agency {agency_id}. Moved to next agency.")
             else:
                 donation.status = DonationStatus.REJECTED
-                donation.agency_id = ""
+                donation.agency_id = None
                 await self.update_donation_in_db(donation)
                 del self.allocation_queues[donation_id]
                 del self.allocation_timers[donation_id]
